@@ -23,7 +23,6 @@
         <button id="step" :disabled="!paused || viewingSnapshot">Step</button>
         <button id="halve">0.5x</button>
         <button id="double">2x</button>
-        <!-- <span id="speed">Speed: {{ speed }}ms</span> -->
         <button id="current" :disabled="!viewingSnapshot">Reset to Current State</button>
       </div>
     </div>
@@ -276,7 +275,6 @@ import { Animator } from '../scripts/animator';
 
 const errorRate = ref(0.5);
 const shAnimator = ref(null);
-const domAnimator = ref(null);
 const softHeap = ref(null);
 const heaps = ref([]);
 const selected = ref(null);
@@ -356,15 +354,6 @@ onMounted(() => {
     document.querySelector('#pseudocode.sidebar-item').classList.add('selected');
     document.querySelector('#sidebar-nav-pseudocode').classList.add('selected');
   });
-
-  // register the node view sidebar item with the node view sidebar item
-  // document.getElementById('sidebar-nav-nodeview').addEventListener('click', () => {
-  //   // remove the selected class from the currently selected sidebar item
-  //   document.querySelector('.sidebar-nav-item.selected').classList.remove('selected');
-  //   document.querySelector('.sidebar-item.selected').classList.remove('selected');
-  //   document.querySelector('#nodeview.sidebar-item').classList.add('selected');
-  //   document.querySelector('#sidebar-nav-nodeview').classList.add('selected');
-  // });
 
   // register the halfSpeed button with a function that halves the animation speed
   // and halves the animation delay
@@ -465,6 +454,7 @@ function registerListeners() {
     insert(keys);
     document.getElementById('inputInsert').value = '';
   });
+
   // register the insert function with the insert input field when
   // the enter key is pressed
   document.getElementById('inputInsert').addEventListener('keyup', (event) => {
@@ -474,8 +464,10 @@ function registerListeners() {
       document.getElementById('inputInsert').value = '';
     }
   });
+
   // register the deleteMin function with the delete-min button
   document.getElementById('deleteMin').addEventListener('click', deleteMin);
+  
   // register the makeHeap function with the make-heap button
   document.getElementById('makeHeap').addEventListener('click', makeHeap);
 }
@@ -499,11 +491,6 @@ main {
   width: 90vw;
   display: inline;
 }
-
-/* #info * {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 1rem;
-} */
 
 #info p {
   margin-top: 0.5rem;

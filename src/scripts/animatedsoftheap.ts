@@ -91,15 +91,10 @@ class SoftHeap {
   static H: Vertex | null = null;
   static threshold: number;
   static animator: Animator;
-  // static domAnimator: Animator | null;
   static inserting: boolean = false;
   constructor(epsilon: number, animator: Animator, domAnimator: Animator | null = null) {
     SoftHeap.threshold = Math.ceil(Math.log2(3 / epsilon));
     SoftHeap.animator = animator;
-    // if (domAnimator) {
-    //   SoftHeap.domAnimator = domAnimator;
-    //   SoftHeap.animator.synchronizeWith(SoftHeap.domAnimator);
-    // }
   }
 
   static animateDOMElements(elements: string[]) {
@@ -229,7 +224,6 @@ class SoftHeap {
 
     if (x.left.left.rank === Vertex.getNil().rank) {
       const left = x.left.elements.node!;
-      const position = { x: left.position.x, y: left.position.y };
       this.animator.removeNode(left.id);
       x.elements.tree!.root.removeChild(x.left.elements.tree!.root);
       x.left = x.right;
@@ -254,7 +248,6 @@ class SoftHeap {
     let x: Vertex = heap.next;
 
     if (heap.rank <= x.rank) {
-      // this.tightenRootList(heap);
       return heap;
     }
 
@@ -282,14 +275,12 @@ class SoftHeap {
 
     heap.next = x.next;
     x.next = heap;
-    // this.tightenRootList(x);
     return x;
   }
 
   static keySwap(heap: Vertex): Vertex {
     let x: Vertex = heap.next;
     if (heap.key < x.key) {
-      // this.tightenRootList(heap);
       return heap;
     }
 
@@ -299,7 +290,6 @@ class SoftHeap {
 
     heap.next = x.next;
     x.next = heap;
-    // this.tightenRootList(x);
     return x;
   }
 
@@ -314,7 +304,6 @@ class SoftHeap {
       );
     }
     this.H = this.keySwap(heap);
-    // this.tightenRootList(this.H);
     return this.H;
   }
 
@@ -331,15 +320,9 @@ class SoftHeap {
           const n = node as AnimatedNode;
           moves.push({ id: n.id, x: n.position.x + dx, y: n.position.y });
         });
-        // this.animator.moveNodesBy(
-        //   nodes.map((n) => n.id),
-        //   dx,
-        //   0
-        // );
       }
       heap = heap.next;
     }
-
     this.animator.moveNodes(moves);
   }
 
