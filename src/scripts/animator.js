@@ -1,5 +1,4 @@
 import * as cytoscape from 'cytoscape';
-// import * as _ from 'lodash';
 /**
  * The Animation class represents an animation that can be played
  * by the animator. It contains a function that is called when the
@@ -591,7 +590,6 @@ class Animator {
             delay = this.animationDelay / 100;
         }
         this.currentAnimation = null;
-        console.log(this.queue.length);
         if (this.paused)
             return;
         this.delayId = setTimeout(() => {
@@ -925,7 +923,8 @@ class Animator {
             var _a, _b;
             (_b = (_a = document.getElementById(ids[0])) === null || _a === void 0 ? void 0 : _a.parentElement) === null || _b === void 0 ? void 0 : _b.scrollIntoView();
             ids.forEach((id) => {
-                document.getElementById(id).classList.add('highlighted');
+                var _a;
+                (_a = document.getElementById(id)) === null || _a === void 0 ? void 0 : _a.classList.add('highlighted');
             });
             this.emit(new CustomEvent('animationFinished', { detail: { type: 'dom-highlight' } }));
         };
@@ -934,7 +933,8 @@ class Animator {
     unhighlightDOMElements(...ids) {
         const unhighlight = () => {
             ids.forEach((id) => {
-                document.getElementById(id).classList.remove('highlighted');
+                var _a;
+                (_a = document.getElementById(id)) === null || _a === void 0 ? void 0 : _a.classList.remove('highlighted');
             });
             this.emit(new CustomEvent('animationFinished'));
         };

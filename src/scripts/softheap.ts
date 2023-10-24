@@ -184,4 +184,71 @@ class SoftHeap {
   }
 }
 
-export default { Item, Vertex, SoftHeap };
+class MaxSoftHeap extends SoftHeap {  
+  static fill(x: Vertex, inserting: boolean) {
+    if (x.left !== Vertex.nil && x.right !== Vertex.nil && x.left.key < x.right.key) {
+      let temp: Vertex = x.left;
+      x.left = x.right;
+      x.right = temp;
+    }
+
+    x.key = x.left.key;
+
+    if (x.set == null) {
+      x.set = x.left.set;
+    } else {
+      let temp: Item = x.set.next;
+      x.set.next = x.left.set!.next;
+      x.left.set!.next = temp;
+    }
+
+    x.left.set = null;
+
+    if (x.left.left === Vertex.nil) {
+      x.left = x.right;
+      x.right = Vertex.nil;
+    } else {
+      this.defill(x.left, inserting);
+    }
+  }
+
+  static keySwap(heap: Vertex): Vertex {
+    let x: Vertex = heap.next;
+    if (heap.key > x.key) {
+      return heap;
+    }
+    heap.next = x.next;
+    x.next = heap;
+    return x;
+  }
+
+  static findMax(heap: Vertex): { key: number; item: Item | null } {
+    let item: null | Item = null;
+    if (heap.set) {
+      item = heap.set;
+    }
+    return { key: heap.key, item };
+  }
+
+  static deleteMax(heap: Vertex): Vertex {
+    let elem: Item | null = heap.set ? heap.set : null;
+    if (!elem) return Vertex.nil;
+
+    if (elem.next !== elem) {
+      heap.set!.next = elem.next;
+      return heap;
+    } else {
+      heap.set = null;
+      let k: number = heap.rank;
+      if (heap.left === Vertex.nil) {
+        heap = heap.next;
+      } else {
+        this.defill(heap, false);
+      }
+      heap = this.reorder(heap, k);
+      return heap;
+    }
+  }
+}
+
+export default { Item, Vertex, SoftHeap, MaxSoftHeap };

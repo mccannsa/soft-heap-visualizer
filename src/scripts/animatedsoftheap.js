@@ -68,19 +68,9 @@ class Vertex {
 }
 Vertex.nil = null;
 class SoftHeap {
-    constructor(epsilon, animator, domAnimator = null) {
+    constructor(epsilon, animator) {
         SoftHeap.threshold = Math.ceil(Math.log2(3 / epsilon));
         SoftHeap.animator = animator;
-        // if (domAnimator) {
-        //   SoftHeap.domAnimator = domAnimator;
-        //   SoftHeap.animator.synchronizeWith(SoftHeap.domAnimator);
-        // }
-    }
-    static animateDOMElements(elements) {
-        if (!this.animator)
-            return;
-        this.animator.highlightDOMElements(...elements);
-        this.animator.unhighlightDOMElements(...elements);
     }
     static makeHeap() {
         this.animator.highlightDOMElements('make-heap');
@@ -190,7 +180,6 @@ class SoftHeap {
         }
         if (x.left.left.rank === Vertex.getNil().rank) {
             const left = x.left.elements.node;
-            const position = { x: left.position.x, y: left.position.y };
             this.animator.removeNode(left.id);
             x.elements.tree.root.removeChild(x.left.elements.tree.root);
             x.left = x.right;
@@ -215,7 +204,6 @@ class SoftHeap {
         var _a;
         let x = heap.next;
         if (heap.rank <= x.rank) {
-            // this.tightenRootList(heap);
             return heap;
         }
         if (heap.elements.node && x.elements.node) {
@@ -243,13 +231,11 @@ class SoftHeap {
         }
         heap.next = x.next;
         x.next = heap;
-        // this.tightenRootList(x);
         return x;
     }
     static keySwap(heap) {
         let x = heap.next;
         if (heap.key < x.key) {
-            // this.tightenRootList(heap);
             return heap;
         }
         if (heap.rank !== Vertex.getNil().rank && x.rank !== Vertex.getNil().rank) {
@@ -257,7 +243,6 @@ class SoftHeap {
         }
         heap.next = x.next;
         x.next = heap;
-        // this.tightenRootList(x);
         return x;
     }
     static reorder(heap, k) {
@@ -268,7 +253,6 @@ class SoftHeap {
             heap.elements.edges.next = this.animator.addEdge(heap.elements.node.id, heap.next.elements.node.id);
         }
         this.H = this.keySwap(heap);
-        // this.tightenRootList(this.H);
         return this.H;
     }
     static tightenRootList(heap) {
@@ -284,11 +268,6 @@ class SoftHeap {
                     const n = node;
                     moves.push({ id: n.id, x: n.position.x + dx, y: n.position.y });
                 });
-                // this.animator.moveNodesBy(
-                //   nodes.map((n) => n.id),
-                //   dx,
-                //   0
-                // );
             }
             heap = heap.next;
         }
@@ -388,6 +367,302 @@ class SoftHeap {
     }
 }
 SoftHeap.H = null;
-// static domAnimator: Animator | null;
 SoftHeap.inserting = false;
-export { Item, SoftHeap };
+class MaxSoftHeap {
+    constructor(epsilon, animator) {
+        MaxSoftHeap.threshold = Math.ceil(Math.log2(3 / epsilon));
+        MaxSoftHeap.animator = animator;
+    }
+    static makeHeap() {
+        const nil = Vertex.getNil();
+        nil.key = -Infinity;
+        return nil;
+    }
+    static insert(heap, elem) {
+        var _a;
+        this.inserting = true;
+        const makeRoot = this.makeRoot(elem);
+        const rankSwap = this.rankSwap(heap);
+        const meld = this.meldableInsert(makeRoot, rankSwap);
+        let ret = this.keySwap(meld);
+        this.tightenRootList(ret);
+        const dx = this.animator.startX / 2 - ((_a = ret.elements.tree) === null || _a === void 0 ? void 0 : _a.getBounds().minX);
+        this.animator.moveAllNodesBy(dx, 0);
+        this.H = ret;
+        this.inserting = false;
+        this.animator.takeSnapshot(`insert ${elem.key}`);
+        return ret;
+    }
+    static defill(x) {
+        this.fill(x);
+        if (this.inserting && x.rank > this.threshold && x.rank % 2 === 0) {
+            this.fill(x);
+            x.corrupted = true;
+            this.animator.changeNodeColor(x.elements.node.id, 'orchid');
+            this.animator.annotateNode(x.elements.node.id, x.setToString());
+        }
+    }
+    static rankSwap(heap) {
+        var _a;
+        let x = heap.next;
+        if (heap.rank <= x.rank) {
+            return heap;
+        }
+        if (heap.elements.node && x.elements.node) {
+            if (heap.elements.edges.next)
+                this.animator.removeEdge(heap.elements.edges.next.id);
+            if (x.elements.edges.next)
+                this.animator.removeEdge(x.elements.edges.next.id);
+            this.animator.swapNodes(heap.elements.node, x.elements.node);
+            const xNext = { source: x.elements.node.id, target: heap.elements.node.id, id: null };
+            if (x.next.elements.node) {
+                const heapNext = {
+                    source: heap.elements.node.id,
+                    target: (_a = x.next.elements.node) === null || _a === void 0 ? void 0 : _a.id,
+                    id: null
+                };
+                const edges = this.animator.addEdges(xNext, heapNext);
+                x.elements.edges.next = edges[0];
+                heap.elements.edges.next = edges[1];
+            }
+            else {
+                const edges = this.animator.addEdges(xNext);
+                x.elements.edges.next = edges[0];
+                heap.elements.edges.next = null;
+            }
+        }
+        heap.next = x.next;
+        x.next = heap;
+        return x;
+    }
+    static reorder(heap, k) {
+        if (heap.next.rank < k) {
+            heap = this.rankSwap(heap);
+            heap.next = this.reorder(heap.next, k);
+            this.animator.removeEdge(heap.elements.edges.next.id);
+            heap.elements.edges.next = this.animator.addEdge(heap.elements.node.id, heap.next.elements.node.id);
+        }
+        this.H = this.keySwap(heap);
+        return this.H;
+    }
+    static tightenRootList(heap) {
+        const moves = [];
+        while (heap.rank !== Vertex.getNil().rank) {
+            let x = heap.next;
+            if (heap.elements.edges.next && heap.elements.tree && x.elements.tree) {
+                const heapMax = heap.elements.tree.getBounds().maxX;
+                const xMin = x.elements.tree.getBounds().minX;
+                const dx = heapMax - xMin + 50;
+                const nodes = this.animator.getElementsWithClass(x.elements.node.id);
+                nodes.forEach((node) => {
+                    const n = node;
+                    moves.push({ id: n.id, x: n.position.x + dx, y: n.position.y });
+                });
+            }
+            heap = heap.next;
+        }
+        this.animator.moveNodes(moves);
+    }
+    static makeRoot(elem) {
+        elem.next = elem;
+        const node = new Vertex(elem);
+        this.animator.moveAllNodesBy(50, 0);
+        node.elements.node = this.animator.addNode(elem.key.toString(), this.animator.startX / 2, this.animator.startY / 2, {
+            key: node.key,
+            rank: node.rank,
+            set: node.setToString()
+        });
+        this.animator.addClassToElement(node.elements.node.id, 'root');
+        this.animator.addClassToElement(node.elements.node.id, node.elements.node.id);
+        node.elements.tree = new AnimatedTree(this.animator, node.elements.node);
+        return node;
+    }
+    static link(x, y) {
+        let z = new Vertex(null);
+        z.set = null;
+        z.rank = x.rank + 1;
+        z.left = x;
+        z.right = y;
+        const xNode = x.elements.node;
+        const yNode = y.elements.node;
+        const xPos = (xNode.position.x + yNode.position.x) / 2;
+        const yPos = xNode.position.y - 50;
+        // x and y nodes are no longer root nodes, so remove the root class
+        // and the next edge from both
+        this.animator.removeClassFromElement(xNode.id, 'root');
+        this.animator.removeClassFromElement(yNode.id, 'root');
+        if (x.elements.edges.next)
+            this.animator.removeEdge(x.elements.edges.next.id);
+        if (y.elements.edges.next)
+            this.animator.removeEdge(y.elements.edges.next.id);
+        // add the linking node and make it a tree
+        z.elements.node = this.animator.addNode('', xPos, yPos, {
+            key: z.key,
+            rank: z.rank,
+            set: z.setToString()
+        });
+        this.animator.addClassToElement(z.elements.node.id, 'root');
+        this.animator.addClassToElement(z.elements.node.id, z.elements.node.id);
+        z.elements.tree = new AnimatedTree(this.animator, z.elements.node);
+        z.elements.tree.root.addChild(x.elements.tree.root);
+        z.elements.tree.root.addChild(y.elements.tree.root);
+        let descendents = this.animator.getElementsWithClass(xNode.id);
+        descendents = descendents.concat(this.animator.getElementsWithClass(yNode.id));
+        descendents.forEach((node) => this.animator.addClassToElement(node.id, z.elements.node.id));
+        const leftEdge = { source: z.elements.node.id, target: x.elements.node.id, id: null };
+        const rightEdge = { source: z.elements.node.id, target: y.elements.node.id, id: null };
+        const edges = this.animator.addEdges(leftEdge, rightEdge);
+        z.elements.edges.left = edges[0];
+        z.elements.edges.right = edges[1];
+        // apply tree layout to the newly link tree
+        z.elements.tree.layout();
+        const zNodes = this.animator.getElementsWithClass(z.elements.node.id).map((node) => node.id);
+        this.animator.moveNodesBy(zNodes, 0, 50);
+        this.defill(z);
+        return z;
+    }
+    static meldableInsert(x, heap) {
+        if (x.rank < heap.rank) {
+            x.next = this.keySwap(heap);
+            if (x.next.rank !== Vertex.getNil().rank) {
+                x.elements.edges.next = this.animator.addEdge(x.elements.node.id, x.next.elements.node.id);
+            }
+            return x;
+        }
+        const link = this.link(x, heap);
+        const rankSwap = this.rankSwap(heap.next);
+        this.H = this.meldableInsert(link, rankSwap);
+        return this.H;
+    }
+    static meldableMeld(x, y) {
+        if (x.rank > y.rank) {
+            let temp = x;
+            x = y;
+            y = temp;
+        }
+        if (y.rank === Vertex.getNil().rank) {
+            return x;
+        }
+        this.H = this.meldableInsert(x, this.meldableMeld(this.rankSwap(x), y));
+        return this.H;
+    }
+    static fixLayout(heap) {
+        let x = heap.next;
+        while (x.rank !== Vertex.getNil().rank) {
+            x.elements.tree.layout();
+            x = x.next;
+        }
+    }
+    static findMax(heap) {
+        let item = null;
+        if (heap.set) {
+            item = heap.set;
+        }
+        return { key: heap.key, item };
+    }
+    static deleteMax(heap) {
+        let elem = heap.set.next;
+        if (!elem)
+            return this.makeHeap();
+        this.animator.highlightCyElements(heap.elements.node.id);
+        this.animator.nop();
+        if (elem.next !== elem) {
+            heap.set.next = elem.next;
+            this.animator.annotateNode(heap.elements.node.id, heap.setToString());
+            this.animator.unhighlightCyElements(heap.elements.node.id);
+            this.animator.takeSnapshot(`delete min ${elem.key}`);
+            this.animator.updateNodeData(heap.elements.node.id, {
+                key: heap.key,
+                rank: heap.rank,
+                set: heap.setToString(false)
+            });
+            return heap;
+        }
+        else {
+            heap.set = null;
+            this.animator.unhighlightCyElements(heap.elements.node.id);
+            let k = heap.rank;
+            if (heap.left.rank === Vertex.getNil().rank) {
+                this.animator.removeNode(heap.elements.node.id);
+                if (heap.next.rank !== Vertex.getNil().rank) {
+                    this.animator.moveAllNodesBy(heap.elements.tree.getBounds().maxX - heap.next.elements.tree.getBounds().minX, 0);
+                }
+                heap = heap.next;
+            }
+            else {
+                this.defill(heap);
+            }
+            heap = this.reorder(heap, k);
+            this.H = heap;
+            this.animator.takeSnapshot(`delete min ${elem.key}`);
+            return this.H;
+        }
+    }
+    static fill(x) {
+        if (x.left.key < x.right.key) {
+            let temp = x.left;
+            this.animator.swapEdges(x.elements.edges.left, x.elements.edges.right);
+            this.animator.swapNodes(x.left.elements.node, x.right.elements.node);
+            x.left = x.right;
+            x.right = temp;
+        }
+        x.key = x.left.key;
+        if (x.set == null) {
+            x.set = x.left.set;
+        }
+        else {
+            let temp = x.set.next;
+            x.set.next = x.left.set.next;
+            x.left.set.next = temp;
+        }
+        x.left.set = null;
+        if (x.left.corrupted) {
+            x.corrupted = true;
+            this.animator.changeNodeColor(x.elements.node.id, 'orchid');
+            this.animator.annotateNode(x.elements.node.id, x.setToString());
+            this.animator.annotateNode(x.left.elements.node.id, x.left.setToString());
+        }
+        this.animator.updateNodeLabel(x.left.elements.node.id, '');
+        this.animator.updateNodeLabel(x.elements.node.id, x.key.toString());
+        if (!x.left.corrupted && x.rank > this.threshold) {
+            this.animator.changeNodeColor(x.elements.node.id, 'pink');
+            this.animator.annotateNode(x.elements.node.id, '');
+        }
+        if (x.left.left.rank === Vertex.getNil().rank) {
+            const left = x.left.elements.node;
+            this.animator.removeNode(left.id);
+            x.elements.tree.root.removeChild(x.left.elements.tree.root);
+            x.left = x.right;
+            x.right = this.makeHeap();
+            this.animator.updateNodeData(x.elements.node.id, {
+                key: x.key,
+                rank: x.rank,
+                set: x.setToString(false)
+            });
+        }
+        else {
+            this.animator.updateNodeData(x.elements.node.id, {
+                key: x.key,
+                rank: x.rank,
+                set: x.setToString(false)
+            });
+            this.defill(x.left);
+        }
+        x.elements.tree.layout();
+    }
+    static keySwap(heap) {
+        let x = heap.next;
+        if (heap.key > x.key) {
+            return heap;
+        }
+        if (heap.rank !== Vertex.getNil().rank && x.rank !== Vertex.getNil().rank) {
+            this.animator.swapNodes(heap.elements.node, x.elements.node);
+        }
+        heap.next = x.next;
+        x.next = heap;
+        return x;
+    }
+}
+MaxSoftHeap.H = null;
+MaxSoftHeap.inserting = false;
+export { Item, SoftHeap, MaxSoftHeap };

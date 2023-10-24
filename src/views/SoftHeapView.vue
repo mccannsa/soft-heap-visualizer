@@ -12,9 +12,24 @@
       <div id="operations" class="hide">
         <button id="makeHeap">make-heap</button>
         <input id="inputInsert" type="text" size="10" :disabled="heaps.length <= 0" />
-        <button id="buttonInsert" :disabled="heaps.length <= 0 || animationsQueued > 0 || viewingSnapshot">insert</button>
-        <button id="findMin" :disabled="heaps.length <= 0 || animationsQueued > 0 || viewingSnapshot">find-min</button>
-        <button id="deleteMin" :disabled="heaps.length <= 0 || animationsQueued > 0 || viewingSnapshot">delete-min</button>
+        <button
+          id="buttonInsert"
+          :disabled="heaps.length <= 0 || animationsQueued > 0 || viewingSnapshot"
+        >
+          insert
+        </button>
+        <button
+          id="findMin"
+          :disabled="heaps.length <= 0 || animationsQueued > 0 || viewingSnapshot"
+        >
+          find-min
+        </button>
+        <button
+          id="deleteMin"
+          :disabled="heaps.length <= 0 || animationsQueued > 0 || viewingSnapshot"
+        >
+          delete-min
+        </button>
         <button id="meld" disabled>meld</button>
       </div>
       <div id="playback">
@@ -30,21 +45,17 @@
       <div id="cy" class="viz" :hidden="viewingSnapshot">
         <div id="status"></div>
         <div id="nodeview">
-            <div id="node-info" v-if="selectedNode != null && selectedNode.cy != null">
-              <div id="node-info-1">
-                <div id="node-key" class="node-item">
-                  Key: {{ selectedNode.cy.data('node.key') }}
-                </div>
-                <div id="node-rank" class="node-item">
-                  Rank: {{ selectedNode.cy.data('node.rank') }}
-                </div>
-              </div>
-              <div id="node-set" class="node-item">
-                Set: {{ selectedNode.cy.data('node.set') }}
+          <div id="node-info" v-if="selectedNode != null && selectedNode.cy != null">
+            <div id="node-info-1">
+              <div id="node-key" class="node-item">Key: {{ selectedNode.cy.data('node.key') }}</div>
+              <div id="node-rank" class="node-item">
+                Rank: {{ selectedNode.cy.data('node.rank') }}
               </div>
             </div>
-            <div v-else><em>Select a node to view its data.</em></div>
+            <div id="node-set" class="node-item">Set: {{ selectedNode.cy.data('node.set') }}</div>
           </div>
+          <div v-else><em>Select a node to view its data.</em></div>
+        </div>
       </div>
       <div id="snapshot" class="viz" :hidden="!viewingSnapshot"></div>
       <div id="sidebar">
@@ -269,7 +280,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Item as Item, SoftHeap as SoftHeap } from '../scripts/animatedsoftheap';
 import { Animator } from '../scripts/animator';
 
@@ -280,7 +291,6 @@ const heaps = ref([]);
 const selected = ref(null);
 const history = ref([]);
 const paused = ref(false);
-const speed = ref(0);
 const viewingSnapshot = ref(false);
 const selectedNode = ref(null);
 const animationsQueued = ref(0);
@@ -304,7 +314,7 @@ const setErrorRate = () => {
   // unhide the operations div
   document.getElementById('operations').classList.remove('hide');
   registerListeners();
-  softHeap.value = new SoftHeap(errorRate.value, shAnimator.value, new Animator('dom'));
+  softHeap.value = new SoftHeap(errorRate.value, shAnimator.value);
   // give focus to the make-heap button
   document.getElementById('makeHeap').focus();
 };
@@ -312,16 +322,18 @@ const setErrorRate = () => {
 const draw = () => {
   shAnimator.value = new Animator('cy', 'snapshot');
   history.value = shAnimator.value.snapshots;
-  speed.value = shAnimator.value.animationDuration;
   selectedNode.value = shAnimator.value.selectedNode;
-  shAnimator.value.eventBus.on('animationQueueEmpty', () =>
-    animationsQueued.value = shAnimator.value.queue.length
+  shAnimator.value.eventBus.on(
+    'animationQueueEmpty',
+    () => (animationsQueued.value = shAnimator.value.queue.length)
   );
-  shAnimator.value.eventBus.on('animationQueued', () =>
-    animationsQueued.value = shAnimator.value.queue.length
+  shAnimator.value.eventBus.on(
+    'animationQueued',
+    () => (animationsQueued.value = shAnimator.value.queue.length)
   );
-  shAnimator.value.eventBus.on('animationStep', () =>
-    animationsQueued.value = shAnimator.value.queue.length
+  shAnimator.value.eventBus.on(
+    'animationStep',
+    () => (animationsQueued.value = shAnimator.value.queue.length)
   );
 };
 
@@ -422,7 +434,7 @@ function insert(keys) {
   // Adding DOM elements for each key
   const status = document.getElementById('status');
   status.innerHTML = '';
-  status.appendChild(document.createElement('span')).innerHTML = 'inserting&nbsp;'
+  status.appendChild(document.createElement('span')).innerHTML = 'inserting&nbsp;';
   keysInt.forEach((key, i) => {
     const child = status.appendChild(document.createElement('span'));
     child.id = `status-${i}`;
@@ -434,10 +446,7 @@ function insert(keys) {
   keysInt.forEach((key, i) => {
     console.log(document.getElementById(`status-${i}`));
     shAnimator.value.highlightDOMElements(`status-${i}`);
-    heaps.value[selected.value] = SoftHeap.insert(
-      heaps.value[selected.value],
-      new Item(key)
-    );
+    heaps.value[selected.value] = SoftHeap.insert(heaps.value[selected.value], new Item(key));
     shAnimator.value.unhighlightDOMElements(`status-${i}`);
   });
 }
@@ -467,7 +476,7 @@ function registerListeners() {
 
   // register the deleteMin function with the delete-min button
   document.getElementById('deleteMin').addEventListener('click', deleteMin);
-  
+
   // register the makeHeap function with the make-heap button
   document.getElementById('makeHeap').addEventListener('click', makeHeap);
 }

@@ -18,6 +18,21 @@ const router = createRouter({
       path: '/visualizations/softheap',
       name: 'softheap',
       component: () => import('../views/SoftHeapView.vue')
+    },
+    {
+      path: '/visualizations/softheap/percentiles',
+      name: 'soft-heap-percentiles',
+      component: () => import('../views/SHPercentilesView.vue')
+    },
+    {
+      path: '/visualizations/softheap/median',
+      name: 'soft-heap-median',
+      component: () => import('../views/SHMedianView.vue')
+    },
+    {
+      path: '/visualizations/softheap/sorting',
+      name: 'soft-heap-sorting',
+      component: () => import('../views/SHSortingView.vue')
     }
   ]
 });

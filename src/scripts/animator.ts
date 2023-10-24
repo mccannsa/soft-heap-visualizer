@@ -160,7 +160,6 @@ class AnimatedNode extends AnimatedElement {
     this.cy = cy;
     cy.on('select', () => {
       this.animator.setSelectedNode(this);
-      
     });
     cy.on('unselect', () => {
       this.animator.setSelectedNode(null);
@@ -657,9 +656,6 @@ class Animator {
     }
 
     this.currentAnimation = null;
-    
-    console.log(this.queue.length);
-    
 
     if (this.paused) return;
 
@@ -1027,7 +1023,7 @@ class Animator {
     const highlight = () => {
       document.getElementById(ids[0])?.parentElement?.scrollIntoView();
       ids.forEach((id) => {
-        document.getElementById(id)!.classList.add('highlighted');
+        document.getElementById(id)?.classList.add('highlighted');
       });
       this.emit(new CustomEvent('animationFinished', { detail: { type: 'dom-highlight' } }));
     };
@@ -1037,7 +1033,7 @@ class Animator {
   unhighlightDOMElements(...ids: Array<string>) {
     const unhighlight = () => {
       ids.forEach((id) => {
-        document.getElementById(id)!.classList.remove('highlighted');
+        document.getElementById(id)?.classList.remove('highlighted');
       });
       this.emit(new CustomEvent('animationFinished'));
     };
