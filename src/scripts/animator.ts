@@ -1,5 +1,4 @@
 import * as cytoscape from 'cytoscape';
-// import * as _ from 'lodash';
 
 /**
  * The Animation class represents an animation that can be played
