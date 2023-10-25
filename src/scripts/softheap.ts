@@ -184,7 +184,7 @@ class SoftHeap {
   }
 }
 
-class MaxSoftHeap extends SoftHeap {  
+class MaxSoftHeap extends SoftHeap {
   static fill(x: Vertex, inserting: boolean) {
     if (x.left !== Vertex.nil && x.right !== Vertex.nil && x.left.key < x.right.key) {
       let temp: Vertex = x.left;

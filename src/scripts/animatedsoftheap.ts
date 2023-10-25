@@ -161,7 +161,7 @@ class SoftHeap {
     const meld = this.meldableInsert(makeRoot, rankSwap);
     meld.elements.tree!.layout();
     let ret = this.keySwap(meld);
-    
+
     const dx = this.animator.startX / 2 - ret.elements.tree?.getBounds().minX!;
     this.animator.moveAllNodesBy(dx, 0);
 
@@ -344,7 +344,7 @@ class SoftHeap {
     node.elements.node = this.animator.addNode(
       elem.key.toString(),
       this.H ? this.H.elements.tree!.getBounds().minX - 50 : this.animator.startX / 2,
-      this.H ? this.H.elements.node!.position.y: this.animator.startY / 2,
+      this.H ? this.H.elements.node!.position.y : this.animator.startY / 2,
       {
         key: node.key,
         rank: node.rank,
@@ -428,8 +428,7 @@ class SoftHeap {
     return this.H;
   }
 
-  static tightenTrees(x: Vertex, y: Vertex)
-  {
+  static tightenTrees(x: Vertex, y: Vertex) {
     // swap x and y if y has a smaller x position than x
     if (x.elements.node!.position.x > y.elements.node!.position.x) {
       let temp: Vertex = x;
@@ -544,7 +543,7 @@ class MaxSoftHeap {
     const meld = this.meldableInsert(makeRoot, rankSwap);
     meld.elements.tree!.layout();
     let ret = this.keySwap(meld);
-    
+
     const dx = this.animator.startX / 2 - ret.elements.tree?.getBounds().minX!;
     this.animator.moveAllNodesBy(dx, 0);
 
@@ -726,8 +725,10 @@ class MaxSoftHeap {
     this.animator.moveAllNodesBy(50, 0);
     node.elements.node = this.animator.addNode(
       elem.key.toString(),
-      this.H?.elements.tree ? this.H.elements.tree!.getBounds().minX - 50 : this.animator.startX / 2,
-      this.H?.elements.tree ? this.H.elements.node!.position.y: this.animator.startY / 2,
+      this.H?.elements.tree
+        ? this.H.elements.tree!.getBounds().minX - 50
+        : this.animator.startX / 2,
+      this.H?.elements.tree ? this.H.elements.node!.position.y : this.animator.startY / 2,
       {
         key: node.key,
         rank: node.rank,
@@ -811,8 +812,7 @@ class MaxSoftHeap {
     return this.H;
   }
 
-  static tightenTrees(x: Vertex, y: Vertex)
-  {
+  static tightenTrees(x: Vertex, y: Vertex) {
     if (!x.elements.node || !y.elements.node) return;
 
     // swap x and y if y has a smaller x position than x

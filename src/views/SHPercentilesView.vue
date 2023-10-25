@@ -7,13 +7,9 @@
         >
       </div>
       <div id="operations">
-        <button id="buttonInsert" :disabled="animationsQueued > 0">
-          insert
-        </button>
+        <button id="buttonInsert" :disabled="animationsQueued > 0">insert</button>
         <button id="findMin" :disabled="animationsQueued > 0">find-min</button>
-        <button id="deleteMin" :disabled="animationsQueued > 0">
-          delete-min
-        </button>
+        <button id="deleteMin" :disabled="animationsQueued > 0">delete-min</button>
       </div>
       <div id="playback">
         <button id="play" :disabled="!paused">Play</button>
@@ -77,20 +73,20 @@ const draw = () => {
 };
 
 onMounted(() => {
-    shAnimator.value = new Animator('cy');
-    maxHeap.value = new MaxSoftHeap(errorRate.value, shAnimator.value);
-    heap.value = MaxSoftHeap.makeHeap();
+  shAnimator.value = new Animator('cy');
+  maxHeap.value = new MaxSoftHeap(errorRate.value, shAnimator.value);
+  heap.value = MaxSoftHeap.makeHeap();
 
   draw();
 
   // register the pseudocode sidebar item with the pseudocode sidebar item
-//   document.getElementById('sidebar-nav-pseudocode').addEventListener('click', () => {
-//     // remove the selected class from the currently selected sidebar item
-//     document.querySelector('.sidebar-nav-item.selected').classList.remove('selected');
-//     document.querySelector('.sidebar-item.selected').classList.remove('selected');
-//     document.querySelector('#pseudocode.sidebar-item').classList.add('selected');
-//     document.querySelector('#sidebar-nav-pseudocode').classList.add('selected');
-//   });
+  //   document.getElementById('sidebar-nav-pseudocode').addEventListener('click', () => {
+  //     // remove the selected class from the currently selected sidebar item
+  //     document.querySelector('.sidebar-nav-item.selected').classList.remove('selected');
+  //     document.querySelector('.sidebar-item.selected').classList.remove('selected');
+  //     document.querySelector('#pseudocode.sidebar-item').classList.add('selected');
+  //     document.querySelector('#sidebar-nav-pseudocode').classList.add('selected');
+  //   });
 
   // register the halfSpeed button with a function that halves the animation speed
   // and halves the animation delay
@@ -140,25 +136,24 @@ function pause() {
  * @param keys the keys of the items to be inserted
  */
 function insert() {
-    // Generate random keys
-    const randomGPA = () => (Math.random() * 4).toFixed(2);
-    const keys = [];
-    for (let i = 0; i < 100; i++) {
-        keys.push(randomGPA());
-    }
-    console.log(keys);
-
+  // Generate random keys
+  const randomGPA = () => (Math.random() * 4).toFixed(2);
+  const keys = [];
+  for (let i = 0; i < 100; i++) {
+    keys.push(randomGPA());
+  }
+  console.log(keys);
 
   // Adding DOM elements for each key
-//   const status = document.getElementById('status');
-//   status.innerHTML = '';
-//   status.appendChild(document.createElement('span')).innerHTML = 'inserting&nbsp;';
-//   keys.forEach((key, i) => {
-//     const child = status.appendChild(document.createElement('span'));
-//     child.id = `status-${i}`;
-//     child.innerHTML = key;
-//     status.innerHTML += '&nbsp;';
-//   });
+  //   const status = document.getElementById('status');
+  //   status.innerHTML = '';
+  //   status.appendChild(document.createElement('span')).innerHTML = 'inserting&nbsp;';
+  //   keys.forEach((key, i) => {
+  //     const child = status.appendChild(document.createElement('span'));
+  //     child.id = `status-${i}`;
+  //     child.innerHTML = key;
+  //     status.innerHTML += '&nbsp;';
+  //   });
 
   // Inserting keys
   keys.forEach((key, i) => {

@@ -1556,7 +1556,7 @@ class AnimatedTree extends AnimatedTreeNode {
       const children = node.children;
       const x = node.node.position.x;
       const y = node.node.position.y;
-      const height = Math.min(...children.map(child => child.getHeight())) + 1;
+      const height = Math.min(...children.map((child) => child.getHeight())) + 1;
       const minXs = children.map((child) => (child as AnimatedTree).getBounds().minX);
       const maxXs = children.map((child) => (child as AnimatedTree).getBounds().maxX);
       const minX = Math.min(...minXs);
