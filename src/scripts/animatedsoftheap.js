@@ -200,10 +200,7 @@ class SoftHeap {
             });
             this.defill(x.left);
         }
-        // console.log(x.elements.tree!.getBounds());
         x.elements.tree.layout();
-        // console.log(x.elements.tree!.getBounds());
-        // this.tightenRootList(x);
     }
     static rankSwap(heap) {
         var _a;
@@ -271,9 +268,6 @@ class SoftHeap {
             this.animator.removeEdge(heap.elements.edges.next.id);
             heap.elements.edges.next = this.animator.addEdge(heap.elements.node.id, heap.next.elements.node.id);
         }
-        // if (heap.next.rank !== Vertex.getNil().rank && heap.next.next.rank !== Vertex.getNil().rank) {
-        //   this.tightenTrees(heap.next, heap.next.next);
-        // }
         return this.keySwap(heap);
     }
     static tightenRootList(heap) {
@@ -292,7 +286,6 @@ class SoftHeap {
             }
             x = x.next;
         }
-        // this.fixLayout(this.H!);
         this.animator.moveNodes(moves);
     }
     static makeRoot(elem) {
@@ -360,12 +353,7 @@ class SoftHeap {
             x.next = this.keySwap(heap);
             if (x.next.rank !== Vertex.getNil().rank) {
                 x.elements.edges.next = this.animator.addEdge(x.elements.node.id, x.next.elements.node.id);
-                console.log('tighten trees');
-                console.log(x.elements.node.position);
-                console.log(x.next.elements.node.position);
                 this.tightenTrees(x, x.next);
-                console.log(x.elements.node.position);
-                console.log(x.next.elements.node.position);
             }
             return x;
         }

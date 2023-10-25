@@ -673,9 +673,7 @@ class Animator {
         this.elements.push(node);
         // Animate the addition of the node.
         const nodeAdd = () => {
-            var _a;
             node.setCy(this.cy.add(cyNode));
-            console.log((_a = node.cy) === null || _a === void 0 ? void 0 : _a.width());
             this.highlightCyElements(node.id);
             setTimeout(() => {
                 this.unhighlightCyElements(node.id);
@@ -1003,7 +1001,6 @@ class Animator {
             }
         });
         if (moves.length === 0) {
-            console.log('no moves');
             return;
         }
         // Animate the movement of the node.
@@ -1310,9 +1307,32 @@ class AnimatedTreeNode {
         }
         return height;
     }
+    getBounds() {
+        const nodes = this.children;
+        const xs = nodes.map((node) => node.node.position.x);
+        const ys = nodes.map((node) => node.node.position.y);
+        const size = AnimatedNode.size / 2;
+        const minX = Math.min(...xs) - size;
+        const maxX = Math.max(...xs) + size;
+        const minY = Math.min(...ys) - size;
+        const maxY = Math.max(...ys) + size;
+        return { minX, maxX, minY, maxY };
+    }
+    getDescendants() {
+        const queue = [];
+        const nodes = [];
+        queue.push(this);
+        while (queue.length > 0) {
+            const node = queue.shift();
+            nodes.push(node);
+            queue.push(...node.children);
+        }
+        return nodes;
+    }
 }
-class AnimatedTree {
+class AnimatedTree extends AnimatedTreeNode {
     constructor(animator, root) {
+        super(root);
         this.animator = animator;
         this.root = new AnimatedTreeNode(root);
     }
@@ -1359,7 +1379,14 @@ class AnimatedTree {
             const children = node.children;
             const x = node.node.position.x;
             const y = node.node.position.y;
-            const height = node.getHeight();
+            const height = Math.min(...children.map(child => child.getHeight())) + 1;
+            const minXs = children.map((child) => child.getBounds().minX);
+            const maxXs = children.map((child) => child.getBounds().maxX);
+            const minX = Math.min(...minXs);
+            const maxX = Math.max(...maxXs);
+            // const width = children.length > 0 ? (maxX - minX) * 50 * children.length : 50;
+            // const width = Math.pow(2, children.length) * 30;
+            // const descendants = node.getDescendants();
             const width = Math.pow(2, height) * 50;
             const childWidth = width / children.length;
             let childX = x - width / 2 + childWidth / 2;
