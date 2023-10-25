@@ -121,6 +121,7 @@ class AnimatedElement {
  * cytoscape data model.
  */
 class AnimatedNode extends AnimatedElement {
+  static size: number = 30;
   label: string;
   position: { x: number; y: number };
 
@@ -750,6 +751,8 @@ class Animator {
     // Animate the addition of the node.
     const nodeAdd = () => {
       node.setCy(this.cy.add(cyNode));
+      console.log(node.cy?.width());
+      
       this.highlightCyElements(node.id);
       setTimeout(() => {
         this.unhighlightCyElements(node.id);
@@ -1113,6 +1116,8 @@ class Animator {
     });
 
     if (moves.length === 0) {
+      console.log('no moves');
+      
       return;
     }
 
@@ -1469,6 +1474,15 @@ class AnimatedTreeNode {
     }
     return height;
   }
+
+  // getBounds(): { minX: number; maxX: number; minY: number; maxY: number } {
+  //   const nodes = this.children;
+  //   const minX = Math.min(...nodes.map((node) => node.node.position.x));
+  //   const maxX = Math.max(...nodes.map((node) => node.node.position.x));
+  //   const minY = Math.min(...nodes.map((node) => node.node.position.y));
+  //   const maxY = Math.max(...nodes.map((node) => node.node.position.y));
+  //   return { minX, maxX, minY, maxY };
+  // }
 }
 
 class AnimatedTree {
@@ -1482,10 +1496,13 @@ class AnimatedTree {
 
   getBounds() {
     const nodes = this.getNodes();
-    const minX = Math.min(...nodes.map((node) => node.node.position.x));
-    const maxX = Math.max(...nodes.map((node) => node.node.position.x));
-    const minY = Math.min(...nodes.map((node) => node.node.position.y));
-    const maxY = Math.max(...nodes.map((node) => node.node.position.y));
+    const xs = nodes.map((node) => node.node.position.x);
+    const ys = nodes.map((node) => node.node.position.y);
+    const size = AnimatedNode.size / 2;
+    const minX = Math.min(...xs) - size;
+    const maxX = Math.max(...xs) + size;
+    const minY = Math.min(...ys) - size;
+    const maxY = Math.max(...ys) + size;
     return { minX, maxX, minY, maxY };
   }
 

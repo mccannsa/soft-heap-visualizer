@@ -444,7 +444,6 @@ function insert(keys) {
 
   // Inserting keys
   keysInt.forEach((key, i) => {
-    console.log(document.getElementById(`status-${i}`));
     shAnimator.value.highlightDOMElements(`status-${i}`);
     heaps.value[selected.value] = SoftHeap.insert(heaps.value[selected.value], new Item(key));
     shAnimator.value.unhighlightDOMElements(`status-${i}`);
@@ -677,5 +676,6 @@ main {
 
 #status {
   margin: 5px;
+  overflow: hidden;
 }
 </style>

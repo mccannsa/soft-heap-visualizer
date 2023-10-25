@@ -159,11 +159,12 @@ class SoftHeap {
     const makeRoot = this.makeRoot(elem);
     const rankSwap = this.rankSwap(heap);
     const meld = this.meldableInsert(makeRoot, rankSwap);
+    meld.elements.tree!.layout();
     let ret = this.keySwap(meld);
-    this.tightenRootList(ret);
+    
     const dx = this.animator.startX / 2 - ret.elements.tree?.getBounds().minX!;
-
     this.animator.moveAllNodesBy(dx, 0);
+
     this.H = ret;
     this.inserting = false;
     this.animator.takeSnapshot(`insert ${elem.key}`);
@@ -172,8 +173,10 @@ class SoftHeap {
 
   static defill(x: Vertex) {
     this.fill(x);
+    x.elements.tree!.layout();
     if (this.inserting && x.rank > this.threshold && x.rank % 2 === 0) {
       this.fill(x);
+      x.elements.tree!.layout();
       x.corrupted = true;
       this.animator.changeNodeColor(x.elements.node!.id, 'orchid');
       this.animator.annotateNode(x.elements.node!.id, x.setToString());
@@ -235,7 +238,12 @@ class SoftHeap {
       });
       this.defill(x.left);
     }
+    // console.log(x.elements.tree!.getBounds());
+    
     x.elements.tree!.layout();
+    // console.log(x.elements.tree!.getBounds());
+    
+    // this.tightenRootList(x);
   }
 
   static rankSwap(heap: Vertex): Vertex {
@@ -269,6 +277,10 @@ class SoftHeap {
 
     heap.next = x.next;
     x.next = heap;
+    this.tightenTrees(x, heap);
+    if (heap.next.rank !== Vertex.getNil().rank) {
+      this.tightenTrees(heap, heap.next);
+    }
     return x;
   }
 
@@ -284,12 +296,22 @@ class SoftHeap {
 
     heap.next = x.next;
     x.next = heap;
+    if (x.rank !== Vertex.getNil().rank) {
+      this.tightenTrees(x, heap);
+    }
+    if (heap.next.rank !== Vertex.getNil().rank) {
+      this.tightenTrees(heap, heap.next);
+    }
     return x;
   }
 
   static reorder(heap: Vertex, k: number): Vertex {
     if (heap.next.rank < k) {
       heap = this.rankSwap(heap);
+      this.tightenTrees(heap, heap.next);
+      if (heap.next.next.rank !== Vertex.getNil().rank) {
+        this.tightenTrees(heap.next, heap.next.next);
+      }
       heap.next = this.reorder(heap.next, k);
       this.animator.removeEdge(heap.elements.edges.next!.id);
       heap.elements.edges.next = this.animator.addEdge(
@@ -297,26 +319,30 @@ class SoftHeap {
         heap.next.elements.node!.id
       );
     }
-    this.H = this.keySwap(heap);
-    return this.H;
+    // if (heap.next.rank !== Vertex.getNil().rank && heap.next.next.rank !== Vertex.getNil().rank) {
+    //   this.tightenTrees(heap.next, heap.next.next);
+    // }
+    return this.keySwap(heap);
   }
 
   static tightenRootList(heap: Vertex) {
     const moves: any = [];
-    while (heap.rank !== Vertex.getNil().rank) {
-      let x: Vertex = heap.next;
+    let x: Vertex = heap.next;
+    while (x.rank !== Vertex.getNil().rank) {
       if (heap.elements.edges.next && heap.elements.tree && x.elements.tree) {
         const heapMax = heap.elements.tree!.getBounds().maxX;
         const xMin = x.elements.tree!.getBounds().minX;
-        const dx = heapMax - xMin + 50;
+        const dx = heapMax - xMin + 30;
         const nodes = this.animator.getElementsWithClass(x.elements.node!.id);
         nodes.forEach((node) => {
           const n = node as AnimatedNode;
           moves.push({ id: n.id, x: n.position.x + dx, y: n.position.y });
         });
       }
-      heap = heap.next;
+      x = x.next;
     }
+    
+    // this.fixLayout(this.H!);
     this.animator.moveNodes(moves);
   }
 
@@ -327,8 +353,8 @@ class SoftHeap {
     this.animator.moveAllNodesBy(50, 0);
     node.elements.node = this.animator.addNode(
       elem.key.toString(),
-      this.animator.startX / 2,
-      this.animator.startY / 2,
+      this.H ? this.H.elements.tree!.getBounds().minX - 50 : this.animator.startX / 2,
+      this.H ? this.H.elements.node!.position.y: this.animator.startY / 2,
       {
         key: node.key,
         rank: node.rank,
@@ -384,7 +410,7 @@ class SoftHeap {
     z.elements.edges.left = edges[0];
     z.elements.edges.right = edges[1];
 
-    // apply tree layout to the newly link tree
+    // apply tree layout to the newly linked tree
     z.elements.tree.layout();
 
     const zNodes = this.animator.getElementsWithClass(z.elements.node.id).map((node) => node.id);
@@ -402,6 +428,15 @@ class SoftHeap {
           x.elements.node!.id,
           x.next.elements.node!.id
         );
+        console.log('tighten trees');
+        console.log(x.elements.node!.position);
+        console.log(x.next.elements.node!.position);
+        
+        
+        
+        this.tightenTrees(x, x.next);
+        console.log(x.elements.node!.position);
+        console.log(x.next.elements.node!.position);
       }
       return x;
     }
@@ -409,6 +444,28 @@ class SoftHeap {
     const rankSwap = this.rankSwap(heap.next);
     this.H = this.meldableInsert(link, rankSwap);
     return this.H;
+  }
+
+  static tightenTrees(x: Vertex, y: Vertex)
+  {
+    // swap x and y if y has a smaller x position than x
+    if (x.elements.node!.position.x > y.elements.node!.position.x) {
+      let temp: Vertex = x;
+      x = y;
+      y = temp;
+    }
+
+    const xNode = x.elements.node!;
+    const yNode = y.elements.node!;
+
+    // get the xMax and yMin x positions
+    const xMax = x.elements.tree!.getBounds().maxX;
+    const yMin = y.elements.tree!.getBounds().minX;
+    const dx = yMin - xMax - 30;
+
+    // move all nodes in the x tree by dx
+    const yNodes = this.animator.getElementsWithClass(yNode.id).map((node) => node.id);
+    this.animator.moveNodesBy(yNodes, -dx, 0);
   }
 
   static meldableMeld(x: Vertex, y: Vertex): Vertex {
@@ -425,6 +482,7 @@ class SoftHeap {
   }
 
   static fixLayout(heap: Vertex) {
+    if (heap == null) return;
     let x = heap.next;
     while (x.rank !== Vertex.getNil().rank) {
       x.elements.tree!.layout();
@@ -531,7 +589,7 @@ class MaxSoftHeap {
       if (heap.elements.edges.next && heap.elements.tree && x.elements.tree) {
         const heapMax = heap.elements.tree!.getBounds().maxX;
         const xMin = x.elements.tree!.getBounds().minX;
-        const dx = heapMax - xMin + 50;
+        const dx = heapMax - xMin + 30;
         const nodes = this.animator.getElementsWithClass(x.elements.node!.id);
         nodes.forEach((node) => {
           const n = node as AnimatedNode;
@@ -540,6 +598,7 @@ class MaxSoftHeap {
       }
       heap = heap.next;
     }
+    // this.fixLayout(this.H!);
     this.animator.moveNodes(moves);
   }
 
@@ -646,6 +705,7 @@ class MaxSoftHeap {
   }
 
   static fixLayout(heap: Vertex) {
+    if (heap == null) return;
     let x = heap.next;
     while (x.rank !== Vertex.getNil().rank) {
       x.elements.tree!.layout();

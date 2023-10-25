@@ -148,6 +148,7 @@ class AnimatedNode extends AnimatedElement {
         });
     }
 }
+AnimatedNode.size = 30;
 /**
  * The AnimatedEdge class represents an edge that can be animated
  * by the animator. It contains a source and a target, and
@@ -672,7 +673,9 @@ class Animator {
         this.elements.push(node);
         // Animate the addition of the node.
         const nodeAdd = () => {
+            var _a;
             node.setCy(this.cy.add(cyNode));
+            console.log((_a = node.cy) === null || _a === void 0 ? void 0 : _a.width());
             this.highlightCyElements(node.id);
             setTimeout(() => {
                 this.unhighlightCyElements(node.id);
@@ -1000,6 +1003,7 @@ class Animator {
             }
         });
         if (moves.length === 0) {
+            console.log('no moves');
             return;
         }
         // Animate the movement of the node.
@@ -1314,10 +1318,13 @@ class AnimatedTree {
     }
     getBounds() {
         const nodes = this.getNodes();
-        const minX = Math.min(...nodes.map((node) => node.node.position.x));
-        const maxX = Math.max(...nodes.map((node) => node.node.position.x));
-        const minY = Math.min(...nodes.map((node) => node.node.position.y));
-        const maxY = Math.max(...nodes.map((node) => node.node.position.y));
+        const xs = nodes.map((node) => node.node.position.x);
+        const ys = nodes.map((node) => node.node.position.y);
+        const size = AnimatedNode.size / 2;
+        const minX = Math.min(...xs) - size;
+        const maxX = Math.max(...xs) + size;
+        const minY = Math.min(...ys) - size;
+        const maxY = Math.max(...ys) + size;
         return { minX, maxX, minY, maxY };
     }
     getNodes() {
