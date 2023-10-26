@@ -18,6 +18,7 @@
         <button id="halve">0.5x</button>
         <button id="double">2x</button>
       </div>
+      {{ removedItems }}
     </div>
     <div id="visualization">
       <div id="cy" class="viz">
@@ -35,9 +36,9 @@
           <div v-else><em>Select a node to view its data.</em></div>
         </div>
       </div>
-      <div id="sidebar">
+      <!-- <div id="sidebar">
         <div id="sidebar-display"></div>
-      </div>
+      </div> -->
     </div>
   </main>
 </template>
@@ -54,6 +55,7 @@ const heap = ref(null);
 const paused = ref(false);
 const selectedNode = ref(null);
 const animationsQueued = ref(0);
+const removedItems = ref([]);
 
 const draw = () => {
   registerListeners();
@@ -163,9 +165,13 @@ function insert() {
   });
 }
 
-function deleteMin() {
+function deleteMax() {
   document.getElementById('status').innerHTML = 'deleting min';
-  heap.value = MaxSoftHeap.deleteMin(heap.value);
+  for (let i = 0; i < 9; i++) {
+    const max = MaxSoftHeap.findMax(heap.value);
+    removedItems.value.push(max.item.key);
+    heap.value = MaxSoftHeap.deleteMax(heap.value);
+  }
 }
 
 function registerListeners() {
@@ -175,7 +181,7 @@ function registerListeners() {
   });
 
   // register the deleteMin function with the delete-min button
-  document.getElementById('deleteMin').addEventListener('click', deleteMin);
+  document.getElementById('deleteMin').addEventListener('click', deleteMax);
 }
 </script>
 
@@ -235,7 +241,7 @@ main {
 }
 
 .viz {
-  width: 70%;
+  width: 100%;
   height: 77vh;
   border: 2px solid black;
   border-radius: 5px;

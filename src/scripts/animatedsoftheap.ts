@@ -60,8 +60,10 @@ class Vertex {
   setToString(truncate: boolean = true) {
     let str: string = '';
     if (!this.set) return str;
+
     let x: Item = this.set.next;
     if (!x) return str;
+
     if (truncate) {
       let count = 0;
       do {
@@ -69,6 +71,7 @@ class Vertex {
         x = x.next;
         count++;
       } while (x !== this.set!.next && count < 3);
+
       if (count >= 3) str += '...';
     } else {
       do {
@@ -197,9 +200,10 @@ class SoftHeap {
     if (x.set == null) {
       x.set = x.left.set;
     } else {
-      let temp: Item = x.set.next;
-      x.set.next = x.left.set!.next;
-      x.left.set!.next = temp;
+      let temp: Item = x.set;
+      x.set = x.left.set!;
+      temp.next = x.set;
+      x.set.next! = temp;
     }
 
     x.left.set = null;
@@ -579,9 +583,10 @@ class MaxSoftHeap {
     if (x.set == null) {
       x.set = x.left.set;
     } else {
-      let temp: Item = x.set.next;
-      x.set.next = x.left.set!.next;
-      x.left.set!.next = temp;
+      let temp: Item = x.set;
+      x.set = x.left.set!;
+      temp.next = x.set;
+      x.set.next! = temp;
     }
 
     x.left.set = null;

@@ -1003,6 +1003,26 @@ class Animator {
     return id;
   }
 
+  highlightElements(...ids: Array<string>) {
+    const highlight = () => {
+      ids.forEach((id) => {
+        this.highlightCyElements(id);
+      });
+      this.emit(new CustomEvent('animationFinished'));
+    }
+    this.queueAnimation(new Animation(highlight));
+  }
+
+  unhighlightElements(...ids: Array<string>) {
+    const unhighlight = () => {
+      ids.forEach((id) => {
+        this.unhighlightCyElements(id);
+      });
+      this.emit(new CustomEvent('animationFinished'));
+    }
+    this.queueAnimation(new Animation(unhighlight));
+  }
+
   highlightCyElements(id: string) {
     this.addClassToElement(id, 'highlighted');
   }
