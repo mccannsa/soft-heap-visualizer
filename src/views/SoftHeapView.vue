@@ -535,6 +535,26 @@ main {
   display: none;
 }
 
+
+#info {
+  width: 90vw;
+  display: inline;
+}
+
+#info p {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+#info code {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #eee;
+}
+
+#info h2 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
 #visualization {
   display: flex;
   flex-direction: row;

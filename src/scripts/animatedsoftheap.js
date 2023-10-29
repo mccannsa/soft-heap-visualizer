@@ -75,14 +75,13 @@ class SoftHeap {
     static makeHeap() {
         this.animator.highlightDOMElements('make-heap');
         this.animator.unhighlightDOMElements('make-heap');
-        // this.animator!.highlightDOMElements('make-heap-return');
-        // this.animator!.unhighlightDOMElements('make-heap-return');
         return Vertex.getNil();
     }
     static findMin(heap) {
+        var _a;
         let item = null;
-        if (heap.set) {
-            item = heap.set;
+        if ((_a = heap.set) === null || _a === void 0 ? void 0 : _a.next) {
+            item = heap.set.next;
         }
         return { key: heap.key, item };
     }
@@ -158,17 +157,16 @@ class SoftHeap {
             x.left = x.right;
             x.right = temp;
         }
+        this.animator.highlightElements(x.elements.node.id);
         x.key = x.left.key;
         if (x.set == null) {
             x.set = x.left.set;
         }
         else {
-            let temp = x.set;
+            let temp = x.set.next;
+            x.set.next = x.left.set.next;
+            x.left.set.next = temp;
             x.set = x.left.set;
-            temp.next = x.set;
-            x.set.next = temp;
-            console.log(temp);
-            console.log(x.set);
         }
         x.left.set = null;
         if (x.left.corrupted) {
@@ -194,6 +192,7 @@ class SoftHeap {
                 rank: x.rank,
                 set: x.setToString(false)
             });
+            this.animator.unhighlightElements(x.elements.node.id);
         }
         else {
             this.animator.updateNodeData(x.elements.node.id, {
@@ -201,6 +200,7 @@ class SoftHeap {
                 rank: x.rank,
                 set: x.setToString(false)
             });
+            this.animator.unhighlightElements(x.elements.node.id);
             this.defill(x.left);
         }
         x.elements.tree.layout();
@@ -295,12 +295,14 @@ class SoftHeap {
         // this.animator!.highlightDOMElements('make-root');
         elem.next = elem;
         const node = new Vertex(elem);
-        this.animator.moveAllNodesBy(50, 0);
+        this.animator.moveAllNodesBy(30, 0);
         node.elements.node = this.animator.addNode(elem.key.toString(), this.H ? this.H.elements.tree.getBounds().minX - 50 : this.animator.startX / 2, this.H ? this.H.elements.node.position.y : this.animator.startY / 2, {
             key: node.key,
             rank: node.rank,
             set: node.setToString()
         });
+        this.animator.highlightElements(node.elements.node.id);
+        this.animator.unhighlightElements(node.elements.node.id);
         this.animator.addClassToElement(node.elements.node.id, 'root');
         this.animator.addClassToElement(node.elements.node.id, node.elements.node.id);
         node.elements.tree = new AnimatedTree(this.animator, node.elements.node);
@@ -308,13 +310,19 @@ class SoftHeap {
         return node;
     }
     static link(x, y) {
+        // highlight x and y trees
+        const xNode = x.elements.node;
+        const yNode = y.elements.node;
+        let descendents = this.animator.getElementsWithClass(xNode.id);
+        descendents = descendents.concat(this.animator.getElementsWithClass(yNode.id));
+        const descendentIds = descendents.map((node) => node.id);
+        this.animator.highlightElements(...descendentIds);
+        // make linking node
         let z = new Vertex(null);
         z.set = null;
         z.rank = x.rank + 1;
         z.left = x;
         z.right = y;
-        const xNode = x.elements.node;
-        const yNode = y.elements.node;
         const xPos = (xNode.position.x + yNode.position.x) / 2;
         const yPos = xNode.position.y - 50;
         // x and y nodes are no longer root nodes, so remove the root class
@@ -331,14 +339,15 @@ class SoftHeap {
             rank: z.rank,
             set: z.setToString()
         });
+        this.animator.highlightElements(z.elements.node.id);
         this.animator.addClassToElement(z.elements.node.id, 'root');
         this.animator.addClassToElement(z.elements.node.id, z.elements.node.id);
         z.elements.tree = new AnimatedTree(this.animator, z.elements.node);
         z.elements.tree.root.addChild(x.elements.tree.root);
         z.elements.tree.root.addChild(y.elements.tree.root);
-        let descendents = this.animator.getElementsWithClass(xNode.id);
-        descendents = descendents.concat(this.animator.getElementsWithClass(yNode.id));
+        // associate descendents with the new tree
         descendents.forEach((node) => this.animator.addClassToElement(node.id, z.elements.node.id));
+        // add edges from the linking node to x and y
         const leftEdge = { source: z.elements.node.id, target: x.elements.node.id, id: null };
         const rightEdge = { source: z.elements.node.id, target: y.elements.node.id, id: null };
         const edges = this.animator.addEdges(leftEdge, rightEdge);
@@ -346,8 +355,12 @@ class SoftHeap {
         z.elements.edges.right = edges[1];
         // apply tree layout to the newly linked tree
         z.elements.tree.layout();
-        const zNodes = this.animator.getElementsWithClass(z.elements.node.id).map((node) => node.id);
+        // move the linked tree down to the level of the root list
+        // const zNodes = this.animator.getElementsWithClass(z.elements.node.id).map((node) => node.id);
+        const zNodes = [z.elements.node.id].concat(descendentIds);
         this.animator.moveNodesBy(zNodes, 0, 50);
+        // remove highlighting from x and y trees
+        this.animator.unhighlightElements(...zNodes);
         this.defill(z);
         return z;
     }
@@ -417,9 +430,10 @@ class MaxSoftHeap {
         return nil;
     }
     static findMax(heap) {
+        var _a;
         let item = null;
-        if (heap.set) {
-            item = heap.set;
+        if ((_a = heap.set) === null || _a === void 0 ? void 0 : _a.next) {
+            item = heap.set.next;
         }
         return { key: heap.key, item };
     }
@@ -500,9 +514,10 @@ class MaxSoftHeap {
             x.set = x.left.set;
         }
         else {
-            let temp = x.set.next;
-            x.set.next = x.left.set.next;
-            x.left.set.next = temp;
+            let temp = x.set;
+            x.set = x.left.set;
+            temp.next = x.set;
+            x.set.next = temp;
         }
         x.left.set = null;
         if (x.left.corrupted) {

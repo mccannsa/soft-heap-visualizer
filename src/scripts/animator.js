@@ -464,7 +464,8 @@ class Animator {
                 {
                     selector: 'node.highlighted',
                     style: {
-                        'background-color': 'red'
+                        'background-color': 'red',
+                        color: 'white'
                     }
                 },
                 {
@@ -674,9 +675,9 @@ class Animator {
         // Animate the addition of the node.
         const nodeAdd = () => {
             node.setCy(this.cy.add(cyNode));
-            this.highlightCyElements(node.id);
+            // this.highlightCyElements(node.id);
             setTimeout(() => {
-                this.unhighlightCyElements(node.id);
+                // this.unhighlightCyElements(node.id);
                 this.emit(new CustomEvent('animationFinished'));
             }, this.animationDuration);
         };
@@ -904,6 +905,24 @@ class Animator {
             id = this.generateId();
         }
         return id;
+    }
+    highlightElements(...ids) {
+        const highlight = () => {
+            ids.forEach((id) => {
+                this.highlightCyElements(id);
+            });
+            this.emit(new CustomEvent('animationFinished'));
+        };
+        this.queueAnimation(new Animation(highlight));
+    }
+    unhighlightElements(...ids) {
+        const unhighlight = () => {
+            ids.forEach((id) => {
+                this.unhighlightCyElements(id);
+            });
+            this.emit(new CustomEvent('animationFinished'));
+        };
+        this.queueAnimation(new Animation(unhighlight));
     }
     highlightCyElements(id) {
         this.addClassToElement(id, 'highlighted');

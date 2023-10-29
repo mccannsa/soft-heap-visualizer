@@ -8,8 +8,7 @@
       </div>
       <div id="operations">
         <button id="buttonInsert" :disabled="animationsQueued > 0">insert</button>
-        <button id="findMin" :disabled="animationsQueued > 0">find-min</button>
-        <button id="deleteMin" :disabled="animationsQueued > 0">delete-min</button>
+        <button id="deleteMax" :disabled="animationsQueued > 0">delete-max</button>
       </div>
       <div id="playback">
         <button id="play" :disabled="!paused">Play</button>
@@ -18,12 +17,11 @@
         <button id="halve">0.5x</button>
         <button id="double">2x</button>
       </div>
-      {{ removedItems }}
     </div>
     <div id="visualization">
       <div id="cy" class="viz">
         <div id="status"></div>
-        <div id="nodeview">
+        <!-- <div id="nodeview">
           <div id="node-info" v-if="selectedNode != null && selectedNode.cy != null">
             <div id="node-info-1">
               <div id="node-key" class="node-item">Key: {{ selectedNode.cy.data('node.key') }}</div>
@@ -34,11 +32,28 @@
             <div id="node-set" class="node-item">Set: {{ selectedNode.cy.data('node.set') }}</div>
           </div>
           <div v-else><em>Select a node to view its data.</em></div>
+        </div> -->
+      </div>
+      <div id="sidebar">
+        <div id="sidebar-display">
+          <h3>Dynamic Percentile Maintenance</h3>
+          <p>We use a max soft heap to select a single item in the 90th percentile. 
+             Error rate &epsi; is set to <sup>1</sup>/<sub>10</sub>, meaning no more 
+             than 10% of the items will be corrupted. By inserting 100 random numbers 
+             (between 1 and 100), then performing a single delete-max operation, we 
+             know the item must be in the 90th percentile, as it is no more than 10
+             items away from its true position.
+          </p>
+          <p>
+            Once items are inserted, a list of the items in sorted order will appear below.
+            The 90th percentile item is colored black. When delete-max is performed, the
+            item returned is highlighted in red. This item will always be within the top 90%.
+          </p>
+          <span id="numbers">
+            <span v-for="(n, idx) in numbers"><span :id="`perc-${idx + 1}`" class="number">{{ n }}</span></span>
+          </span>
         </div>
       </div>
-      <!-- <div id="sidebar">
-        <div id="sidebar-display"></div>
-      </div> -->
     </div>
   </main>
 </template>
@@ -55,7 +70,9 @@ const heap = ref(null);
 const paused = ref(false);
 const selectedNode = ref(null);
 const animationsQueued = ref(0);
-const removedItems = ref([]);
+const numbers = ref([]);
+const removedItem = ref('');
+
 
 const draw = () => {
   registerListeners();
@@ -76,6 +93,8 @@ const draw = () => {
 
 onMounted(() => {
   shAnimator.value = new Animator('cy');
+  shAnimator.value.setAnimationDuration(62);
+  shAnimator.value.setAnimationDelay(25);
   maxHeap.value = new MaxSoftHeap(errorRate.value, shAnimator.value);
   heap.value = MaxSoftHeap.makeHeap();
 
@@ -138,78 +157,81 @@ function pause() {
  * @param keys the keys of the items to be inserted
  */
 function insert() {
-  // Generate random keys
-  const randomGPA = () => (Math.random() * 4).toFixed(2);
+  // Create a list of random numbers between 1 and 100
   const keys = [];
-  for (let i = 0; i < 100; i++) {
-    keys.push(randomGPA());
+  for (let i = 1; i <= 100; i++) {
+    keys.push(Math.floor(Math.random() * 100) + 1);
   }
-  console.log(keys);
+
+  numbers.value = [].concat(keys).sort((a, b) => a - b);
 
   // Adding DOM elements for each key
-  //   const status = document.getElementById('status');
-  //   status.innerHTML = '';
-  //   status.appendChild(document.createElement('span')).innerHTML = 'inserting&nbsp;';
-  //   keys.forEach((key, i) => {
-  //     const child = status.appendChild(document.createElement('span'));
-  //     child.id = `status-${i}`;
-  //     child.innerHTML = key;
-  //     status.innerHTML += '&nbsp;';
-  //   });
+  const status = document.getElementById('status');
+  status.innerHTML = '';
+  status.appendChild(document.createElement('span')).innerHTML = 'inserting&nbsp;';
+  keys.forEach((key, i) => {
+    const child = status.appendChild(document.createElement('span'));
+    child.id = `status-${i}`;
+    child.innerHTML = key;
+    status.innerHTML += '&nbsp;';
+  });
 
   // Inserting keys
   keys.forEach((key, i) => {
-    // shAnimator.value.highlightDOMElements(`status-${i}`);
+    shAnimator.value.highlightDOMElements(`status-${i}`);
     heap.value = MaxSoftHeap.insert(heap.value, new Item(key));
-    // shAnimator.value.unhighlightDOMElements(`status-${i}`);
+    shAnimator.value.unhighlightDOMElements(`status-${i}`);
   });
 }
 
+function highlightNintieth() {
+  let ele = document.getElementById(`perc-90`);
+  let interval = setInterval(() =>
+    {
+      if (!ele)
+      {
+        ele = document.getElementById('perc-90');
+      }
+      else
+      {
+        ele.classList.add('nintieth');
+        clearInterval(interval);
+      }
+    }, 100);
+}
+
 function deleteMax() {
-  document.getElementById('status').innerHTML = 'deleting min';
-  for (let i = 0; i < 9; i++) {
-    const max = MaxSoftHeap.findMax(heap.value);
-    removedItems.value.push(max.item.key);
-    heap.value = MaxSoftHeap.deleteMax(heap.value);
-  }
+  const max = MaxSoftHeap.findMax(heap.value);
+  removedItem.value = max.item.key;
+  heap.value = MaxSoftHeap.deleteMax(heap.value);
+  document.getElementById('status').innerHTML = `delete max returns ${removedItem.value}`;
+  const idx = numbers.value.lastIndexOf(removedItem.value);
+  document.getElementById(`perc-${idx + 1}`).classList.add('highlighted');
 }
 
 function registerListeners() {
   // register the insert function with the insert button
   document.getElementById('buttonInsert').addEventListener('click', () => {
     insert();
+    highlightNintieth();
   });
 
-  // register the deleteMin function with the delete-min button
-  document.getElementById('deleteMin').addEventListener('click', deleteMax);
+  // register the deleteMax function with the delete-min button
+  document.getElementById('deleteMax').addEventListener('click', deleteMax);
 }
 </script>
 
 <style>
+#sidebar h3 {
+  margin-top: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: black 2px solid;
+}
+
 main {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-#info {
-  width: 90vw;
-  display: inline;
-}
-
-#info p {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-#info code {
-  font-family: 'Courier New', Courier, monospace;
-  background-color: #eee;
-}
-
-#info h2 {
-  margin-top: 0;
-  margin-bottom: 0;
 }
 
 #controls {
@@ -224,14 +246,6 @@ main {
   margin-top: 1rem;
 }
 
-.hide {
-  opacity: 0;
-}
-
-.hide-no-space {
-  display: none;
-}
-
 #visualization {
   display: flex;
   flex-direction: row;
@@ -241,7 +255,7 @@ main {
 }
 
 .viz {
-  width: 100%;
+  width: 70%;
   height: 77vh;
   border: 2px solid black;
   border-radius: 5px;
@@ -249,47 +263,11 @@ main {
   /* padding: 0.5rem; */
 }
 
-.function {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  background-color: #eee;
-  border-radius: 3px;
-  padding: 0.5rem;
-}
-
-#pseudocode .highlighted {
-  background-color: palevioletred;
-}
-
-#status span.highlighted {
+#status span.highlighted, .number.highlighted {
   background-color: palevioletred;
   color: white;
   border-radius: 2px;
   padding: 2px;
-}
-
-#history.sidebar-item {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-}
-
-.function .function-header {
-  font-weight: bold;
-}
-
-#pseudocode .function {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.85rem;
-}
-
-#pseudocode .pseudo-info {
-  font-style: italic;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-#epsilon {
-  margin-left: 1rem;
 }
 
 #sidebar {
@@ -306,72 +284,23 @@ main {
   padding: 0.5rem;
 }
 
-#sidebar-nav {
-  background-color: lightgray;
-  color: black;
-  display: flex;
-  flex-direction: row;
-  width: 100%;
+#numbers {
+  overflow-wrap: break-word;
 }
 
-#sidebar-nav .sidebar-nav-item {
-  padding: 0.25rem;
-  cursor: pointer;
-  background-color: darkgray;
-  border-right: black 2px solid;
-  border-bottom: black 2px solid;
+.number {
+  margin-right: 0.5em;
 }
 
-#sidebar .sidebar-item {
-  margin-top: 0.5rem;
-  border-radius: 3px;
-  display: none;
-}
-
-#sidebar .sidebar-item.selected {
-  display: block;
-  height: 100%;
-}
-
-#sidebar-nav .sidebar-nav-item:hover {
-  background-color: #fff;
-}
-
-#sidebar-nav .sidebar-nav-item.selected {
-  background-color: #fff;
-  border-bottom: none;
-}
-
-#history :nth-child(odd) {
-  background-color: #ddd;
-}
-
-#history * {
-  padding: 0.125rem;
-}
-
-#nodeview {
-  width: 10vw;
-  height: 2.5rem;
-  padding: 0.25rem;
-  border-left: 2px solid black;
-  border-bottom: 2px solid black;
-  border-bottom-left-radius: 5px;
-  position: absolute;
-  top: 0;
-  right: 0;
-  background-color: lightgray;
-  overflow: scroll;
-}
-
-#node-info-1 {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  height: 100%;
+.nintieth {
+  background-color: black;
+  color: white;
+  border-radius: 2px;
+  padding: 2px;
 }
 
 #status {
   margin: 5px;
+  overflow: hidden;
 }
 </style>
