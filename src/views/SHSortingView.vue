@@ -55,7 +55,7 @@
   import { Item as Item, SoftHeap as SoftHeap } from '../scripts/animatedsoftheap';
   import { Animator } from '../scripts/animator';
   
-  const errorRate = ref(1.5);
+  const errorRate = ref(0.5);
   const shAnimator = ref(null);
   const maxHeap = ref(null);
   const heap = ref(null);
@@ -158,7 +158,7 @@
     }
 
     // Create an array from 1 to 50
-    const keys = Array.from({ length: 25 }, (_, index) => index + 1);
+    const keys = Array.from({ length: 50 }, (_, index) => index + 1);
 
     // Randomize the array
     shuffle(keys);
@@ -184,7 +184,7 @@
   
   function deleteMin() {
     document.getElementById('status').innerHTML = `deleting all items`;
-    for (let i = 0; i < 25; i++)
+    for (let i = 0; i < 50; i++)
     {
         const min = SoftHeap.findMin(heap.value);
         removedItems.value.push(min.item.key);

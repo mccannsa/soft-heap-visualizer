@@ -1578,13 +1578,6 @@ class AnimatedTree extends AnimatedTreeNode {
       const x = node.node.position.x;
       const y = node.node.position.y;
       const height = Math.min(...children.map((child) => child.getHeight())) + 1;
-      const minXs = children.map((child) => (child as AnimatedTree).getBounds().minX);
-      const maxXs = children.map((child) => (child as AnimatedTree).getBounds().maxX);
-      const minX = Math.min(...minXs);
-      const maxX = Math.max(...maxXs);
-      // const width = children.length > 0 ? (maxX - minX) * 50 * children.length : 50;
-      // const width = Math.pow(2, children.length) * 30;
-      // const descendants = node.getDescendants();
       const width = Math.pow(2, height) * 50;
       const childWidth = width / children.length;
       let childX = x - width / 2 + childWidth / 2;
