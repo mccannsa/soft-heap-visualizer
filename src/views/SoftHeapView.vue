@@ -696,6 +696,10 @@ main {
 
 #status {
   margin: 5px;
-  overflow: hidden;
+  overflow: scroll;
+  width: 84%;
+  position: absolute;
+  top: 0;
+  z-index: 1;
 }
 </style>

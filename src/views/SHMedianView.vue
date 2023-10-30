@@ -312,7 +312,11 @@
   
   #status {
     margin: 5px;
-    overflow: hidden;
+    overflow: scroll;
+    width: 99%;
+    position: absolute;
+    top: 0;
+    z-index: 1;
   }
   </style>
   
