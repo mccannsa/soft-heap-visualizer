@@ -603,11 +603,9 @@ class MaxSoftHeap {
     this.fill(x);
     x.elements.tree!.layout();
     if (this.inserting && x.rank > this.threshold && x.rank % 2 === 0) {
+      x.corrupted = true;
       this.fill(x);
       x.elements.tree!.layout();
-      x.corrupted = true;
-      this.animator.changeNodeColor(x.elements.node!.id, 'orchid');
-      this.animator.annotateNode(x.elements.node!.id, x.setToString());
     }
   }
 
@@ -622,30 +620,34 @@ class MaxSoftHeap {
 
     x.key = x.left.key;
 
+    let emptied = false;
     if (x.set == null) {
+      emptied = true;
       x.set = x.left.set;
     } else {
-      let temp: Item = x.set;
-      x.set = x.left.set!;
-      temp.next = x.set;
-      x.set.next! = temp;
+      let temp: Item = x.set!.next;
+      x.set!.next = x.left.set!.next;
+      x.left.set!.next = temp;
+      x.set = x.left.set;
     }
 
     x.left.set = null;
+
+    this.animator.updateNodeLabel(x.left.elements.node!.id, '');
+    this.animator.updateNodeLabel(x.elements.node!.id, x.key.toString());
 
     if (x.left.corrupted) {
       x.corrupted = true;
       this.animator.changeNodeColor(x.elements.node!.id, 'orchid');
       this.animator.annotateNode(x.elements.node!.id, x.setToString());
       this.animator.annotateNode(x.left.elements.node!.id, x.left.setToString());
-    }
-
-    this.animator.updateNodeLabel(x.left.elements.node!.id, '');
-    this.animator.updateNodeLabel(x.elements.node!.id, x.key.toString());
-
-    if (!x.left.corrupted && x.rank > this.threshold) {
+    } else if (!x.left.corrupted && emptied) {
+      x.corrupted = false;
       this.animator.changeNodeColor(x.elements.node!.id, 'pink');
       this.animator.annotateNode(x.elements.node!.id, '');
+    } else if (x.corrupted) {
+      this.animator.changeNodeColor(x.elements.node!.id, 'orchid');
+      this.animator.annotateNode(x.elements.node!.id, x.setToString());
     }
 
     if (x.left.left.rank === Vertex.getNil().rank) {
