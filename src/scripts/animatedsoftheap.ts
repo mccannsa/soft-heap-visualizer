@@ -101,8 +101,8 @@ class SoftHeap {
   }
 
   static makeHeap(): Vertex {
-    this.animator!.highlightDOMElements('make-heap');
-    this.animator!.unhighlightDOMElements('make-heap');
+    // this.animator!.highlightDOMElements('make-heap');
+    // this.animator!.unhighlightDOMElements('make-heap');
     return Vertex.getNil();
   }
 
@@ -176,11 +176,9 @@ class SoftHeap {
     this.fill(x);
     x.elements.tree!.layout();
     if (this.inserting && x.rank > this.threshold && x.rank % 2 === 0) {
+      x.corrupted = true;
       this.fill(x);
       x.elements.tree!.layout();
-      x.corrupted = true;
-      this.animator.changeNodeColor(x.elements.node!.id, 'orchid');
-      this.animator.annotateNode(x.elements.node!.id, x.setToString());
     }
   }
 
@@ -197,7 +195,9 @@ class SoftHeap {
 
     x.key = x.left.key;
 
+    let emptied = false;
     if (x.set == null) {
+      emptied = true;
       x.set = x.left.set;
     } else {
       let temp: Item = x.set!.next;
@@ -208,19 +208,21 @@ class SoftHeap {
 
     x.left.set = null;
 
+    this.animator.updateNodeLabel(x.left.elements.node!.id, '');
+    this.animator.updateNodeLabel(x.elements.node!.id, x.key.toString());
+
     if (x.left.corrupted) {
       x.corrupted = true;
       this.animator.changeNodeColor(x.elements.node!.id, 'orchid');
       this.animator.annotateNode(x.elements.node!.id, x.setToString());
       this.animator.annotateNode(x.left.elements.node!.id, x.left.setToString());
-    }
-
-    this.animator.updateNodeLabel(x.left.elements.node!.id, '');
-    this.animator.updateNodeLabel(x.elements.node!.id, x.key.toString());
-
-    if (!x.left.corrupted && x.rank > this.threshold) {
+    } else if (!x.left.corrupted && emptied) {
+      x.corrupted = false;
       this.animator.changeNodeColor(x.elements.node!.id, 'pink');
       this.animator.annotateNode(x.elements.node!.id, '');
+    } else if (x.corrupted) {
+      this.animator.changeNodeColor(x.elements.node!.id, 'orchid');
+      this.animator.annotateNode(x.elements.node!.id, x.setToString());
     }
 
     if (x.left.left.rank === Vertex.getNil().rank) {
@@ -291,8 +293,30 @@ class SoftHeap {
       return heap;
     }
 
-    if (heap.rank !== Vertex.getNil().rank && x.rank !== Vertex.getNil().rank) {
-      this.animator.swapNodes(heap.elements.node!, x.elements.node!);
+    // if (heap.rank !== Vertex.getNil().rank && x.rank !== Vertex.getNil().rank) {
+    //   this.animator.swapNodes(heap.elements.node!, x.elements.node!);
+    // }
+
+    if (heap.elements.node && x.elements.node) {
+      if (heap.elements.edges.next) this.animator.removeEdge(heap.elements.edges.next.id);
+      if (x.elements.edges.next) this.animator.removeEdge(x.elements.edges.next.id);
+
+      this.animator.swapNodes(heap.elements.node, x.elements.node);
+      const xNext = { source: x.elements.node.id, target: heap.elements.node.id, id: null };
+      if (x.next.elements.node) {
+        const heapNext = {
+          source: heap.elements.node.id,
+          target: x.next.elements.node?.id,
+          id: null
+        };
+        const edges = this.animator.addEdges(xNext, heapNext);
+        x.elements.edges.next = edges[0];
+        heap.elements.edges.next = edges[1];
+      } else {
+        const edges = this.animator.addEdges(xNext);
+        x.elements.edges.next = edges[0];
+        heap.elements.edges.next = null;
+      }
     }
 
     heap.next = x.next;
