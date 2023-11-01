@@ -547,6 +547,10 @@ class Animator {
     this.eventBus.on('animationResumed', this.animationResumedListener.bind(this));
   }
 
+  addStyle(selector: string, style: Object) {
+    this.cy.style().selector(selector).style(style).update();
+  }
+
   /**
    * Emits an event using this animators event bus. If the
    * animator is paused, the event is stored and emitted
@@ -1041,6 +1045,16 @@ class Animator {
     this.queueAnimation(new Animation(nop));
   }
 
+  customAnimation(animation: Function) {
+    const custom = () => {
+      animation();
+      setTimeout(() => {
+        this.emit(new CustomEvent('animationFinished'));
+      }, this.animationDuration);
+    };
+    this.queueAnimation(new Animation(custom));
+  }
+
   highlightDOMElements(...ids: Array<string>) {
     const highlight = () => {
       document.getElementById(ids[0])?.parentElement?.scrollIntoView();
@@ -1266,7 +1280,8 @@ class Animator {
     return element ? element.classes.includes(className) : false;
   }
 
-  getElementsWithClass(className: string): Array<AnimatedElement> {
+  getElementsWithClass(className: string | undefined): Array<AnimatedElement> {
+    if (!className) return [];
     return this.elements.filter((e) => e.classes.includes(className));
   }
 
