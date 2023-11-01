@@ -98,6 +98,12 @@ class SoftHeap {
   constructor(epsilon: number, animator: Animator) {
     SoftHeap.threshold = Math.ceil(Math.log2(3 / epsilon));
     SoftHeap.animator = animator;
+    SoftHeap.animator.addStyle('.corrupted', {
+      'background-color': 'orchid'
+    })
+    SoftHeap.animator.addStyle('.corrupted.highlighted', {
+      'background-color': 'red'
+    })
   }
 
   static makeHeap(): Vertex {
@@ -174,11 +180,9 @@ class SoftHeap {
 
   static defill(x: Vertex) {
     this.fill(x);
-    x.elements.tree!.layout();
     if (this.inserting && x.rank > this.threshold && x.rank % 2 === 0) {
       x.corrupted = true;
       this.fill(x);
-      x.elements.tree!.layout();
     }
   }
 
@@ -213,15 +217,21 @@ class SoftHeap {
 
     if (x.left.corrupted) {
       x.corrupted = true;
-      this.animator.changeNodeColor(x.elements.node!.id, 'orchid');
+      this.animator.customAnimation(() => {
+        this.animator.addClassToElement(x.elements.node!.id, 'corrupted');
+      });
       this.animator.annotateNode(x.elements.node!.id, x.setToString());
       this.animator.annotateNode(x.left.elements.node!.id, x.left.setToString());
     } else if (!x.left.corrupted && emptied) {
       x.corrupted = false;
-      this.animator.changeNodeColor(x.elements.node!.id, 'pink');
+      this.animator.customAnimation(() => {
+        this.animator.removeClassFromElement(x.elements.node!.id, 'corrupted');
+      });
       this.animator.annotateNode(x.elements.node!.id, '');
     } else if (x.corrupted) {
-      this.animator.changeNodeColor(x.elements.node!.id, 'orchid');
+      this.animator.customAnimation(() => {
+        this.animator.addClassToElement(x.elements.node!.id, 'corrupted');
+      });
       this.animator.annotateNode(x.elements.node!.id, x.setToString());
     }
 
@@ -257,6 +267,11 @@ class SoftHeap {
     }
 
     if (heap.elements.node && x.elements.node) {
+
+      // const tree = this.animator.getElementsWithClass(heap.elements.node!.id);
+      const tree  = this.animator.getElementsWithClass(x.elements.node!.id);
+      this.animator.highlightElements(...tree.map((node) => node.id));
+
       if (heap.elements.edges.next) this.animator.removeEdge(heap.elements.edges.next.id);
       if (x.elements.edges.next) this.animator.removeEdge(x.elements.edges.next.id);
 
@@ -276,6 +291,8 @@ class SoftHeap {
         x.elements.edges.next = edges[0];
         heap.elements.edges.next = null;
       }
+
+        this.animator.unhighlightElements(...tree.map((node) => node.id));
     }
 
     heap.next = x.next;
@@ -293,11 +310,12 @@ class SoftHeap {
       return heap;
     }
 
-    // if (heap.rank !== Vertex.getNil().rank && x.rank !== Vertex.getNil().rank) {
-    //   this.animator.swapNodes(heap.elements.node!, x.elements.node!);
-    // }
-
     if (heap.elements.node && x.elements.node) {
+      
+      // const tree = this.animator.getElementsWithClass(heap.elements.node!.id);
+      const tree  = this.animator.getElementsWithClass(x.elements.node!.id);
+      this.animator.highlightElements(...tree.map((node) => node.id));
+
       if (heap.elements.edges.next) this.animator.removeEdge(heap.elements.edges.next.id);
       if (x.elements.edges.next) this.animator.removeEdge(x.elements.edges.next.id);
 
@@ -317,6 +335,8 @@ class SoftHeap {
         x.elements.edges.next = edges[0];
         heap.elements.edges.next = null;
       }
+
+      this.animator.unhighlightElements(...tree.map((node) => node.id));
     }
 
     heap.next = x.next;
@@ -452,6 +472,9 @@ class SoftHeap {
     this.animator.unhighlightElements(...zNodes);
 
     this.defill(z);
+
+    this.animator.highlightElements(...zNodes);
+    this.animator.unhighlightElements(...zNodes);
     return z;
   }
 
@@ -676,6 +699,7 @@ class MaxSoftHeap {
     let x: Vertex = heap.next;
 
     if (heap.rank <= x.rank) {
+      this.animator.unhighlightCyElements(heap.elements.node!.id);
       return heap;
     }
 
