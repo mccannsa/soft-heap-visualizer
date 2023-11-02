@@ -173,6 +173,8 @@
       heap.value = SoftHeap.insert(heap.value, new Item(key));
       shAnimator.value.unhighlightDOMElements(`status-${i}`);
     });
+
+    document.getElementById("btnInsert").disabled = true;
   }
   
   function highlightMedianRange() {
@@ -212,6 +214,7 @@
         heap.value = SoftHeap.deleteMin(heap.value);
     }
     shAnimator.value.highlightDOMElements(`num-${idx + 1}`);
+    document.getElementById("deleteMin").disabled = true;
   }
   
   function registerListeners() {

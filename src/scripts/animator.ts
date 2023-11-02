@@ -1,4 +1,4 @@
-import * as cytoscape from 'cytoscape';
+import cytoscape from 'cytoscape';
 
 /**
  * The Animation class represents an animation that can be played
@@ -129,7 +129,7 @@ class AnimatedNode extends AnimatedElement {
    * cy may be null since elements are added to the cytoscape instance
    * after the corresponding AnimatedElement is created
    */
-  cy: cytoscape.NodeSingular | null;
+  cy: cytoscape.NodeSingular | null = null;
 
   /**
    * The constructor takes an animator, a label, and a position.
@@ -188,7 +188,7 @@ class AnimatedEdge extends AnimatedElement {
    * cy may be null since elements are added to the cytoscape instance
    * after the corresponding AnimatedElement is created
    */
-  cy: cytoscape.EdgeSingular | null;
+  cy: cytoscape.EdgeSingular | null = null;
 
   /**
    * The constructor takes an animator, an id, a source, and a target.
@@ -339,9 +339,8 @@ class Snapshot {
     this.index = Snapshot.num++;
     if (!name) {
       name = `Snapshot ${this.index}`;
-    } else {
-      this.name = name;
     }
+    this.name = name;
     this.state = state;
     this.historyIndex = historyIndex;
   }
@@ -412,8 +411,8 @@ class Animator {
   animationDelay: number = 500;
   currentAnimation: Animation | null = null;
   idle: boolean = true;
-  startX: number;
-  startY: number;
+  startX: number = 0;
+  startY: number = 0;
   eventBus: AnimatorEventBus = new AnimatorEventBus();
   // synchronizedAnimators: Array<Animator> = [];
   delayId: number | null = null;
@@ -434,6 +433,8 @@ class Animator {
    */
   constructor(container: string, historyContainer: string | null = null) {
     if (!document.getElementById(container)) {
+      this.cy = cytoscape({});
+      this.historyContainer = cytoscape({});
       return;
     }
     if (historyContainer && document.getElementById(historyContainer)) {
@@ -486,6 +487,8 @@ class Animator {
           }
         ]
       });
+    } else {
+      this.historyContainer = cytoscape({});
     }
 
     this.cy = cytoscape({

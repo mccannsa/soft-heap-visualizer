@@ -1,4 +1,4 @@
-import * as cytoscape from 'cytoscape';
+import cytoscape from 'cytoscape';
 /**
  * The Animation class represents an animation that can be played
  * by the animator. It contains a function that is called when the
@@ -118,6 +118,11 @@ class AnimatedNode extends AnimatedElement {
      */
     constructor(animator, label, x, y) {
         super(animator, 'nodes');
+        /**
+         * cy may be null since elements are added to the cytoscape instance
+         * after the corresponding AnimatedElement is created
+         */
+        this.cy = null;
         this.label = label;
         this.position = { x, y };
     }
@@ -166,6 +171,11 @@ class AnimatedEdge extends AnimatedElement {
      */
     constructor(animator, id, source, target) {
         super(animator, 'edges', id);
+        /**
+         * cy may be null since elements are added to the cytoscape instance
+         * after the corresponding AnimatedElement is created
+         */
+        this.cy = null;
         this.source = source;
         this.target = target;
     }
@@ -283,9 +293,7 @@ class Snapshot {
         if (!name) {
             name = `Snapshot ${this.index}`;
         }
-        else {
-            this.name = name;
-        }
+        this.name = name;
         this.state = state;
         this.historyIndex = historyIndex;
     }
@@ -365,6 +373,8 @@ class Animator {
         this.animationDelay = 500;
         this.currentAnimation = null;
         this.idle = true;
+        this.startX = 0;
+        this.startY = 0;
         this.eventBus = new AnimatorEventBus();
         // synchronizedAnimators: Array<Animator> = [];
         this.delayId = null;
@@ -373,6 +383,8 @@ class Animator {
         this.snapshots = [];
         this.selectedNode = null;
         if (!document.getElementById(container)) {
+            this.cy = cytoscape({});
+            this.historyContainer = cytoscape({});
             return;
         }
         if (historyContainer && document.getElementById(historyContainer)) {
@@ -425,6 +437,9 @@ class Animator {
                     }
                 ]
             });
+        }
+        else {
+            this.historyContainer = cytoscape({});
         }
         this.cy = cytoscape({
             container: document.getElementById(container),
@@ -483,6 +498,9 @@ class Animator {
         this.eventBus.on('animationStarted', this.animationStartedListener.bind(this));
         this.eventBus.on('animationPaused', this.animationPausedListener.bind(this));
         this.eventBus.on('animationResumed', this.animationResumedListener.bind(this));
+    }
+    addStyle(selector, style) {
+        this.cy.style().selector(selector).style(style).update();
     }
     /**
      * Emits an event using this animators event bus. If the
@@ -938,6 +956,15 @@ class Animator {
         };
         this.queueAnimation(new Animation(nop));
     }
+    customAnimation(animation) {
+        const custom = () => {
+            animation();
+            setTimeout(() => {
+                this.emit(new CustomEvent('animationFinished'));
+            }, this.animationDuration);
+        };
+        this.queueAnimation(new Animation(custom));
+    }
     highlightDOMElements(...ids) {
         const highlight = () => {
             var _a, _b;
@@ -1130,6 +1157,8 @@ class Animator {
         return element ? element.classes.includes(className) : false;
     }
     getElementsWithClass(className) {
+        if (!className)
+            return [];
         return this.elements.filter((e) => e.classes.includes(className));
     }
     removeClassFromElement(id, className) {
@@ -1399,13 +1428,6 @@ class AnimatedTree extends AnimatedTreeNode {
             const x = node.node.position.x;
             const y = node.node.position.y;
             const height = Math.min(...children.map((child) => child.getHeight())) + 1;
-            const minXs = children.map((child) => child.getBounds().minX);
-            const maxXs = children.map((child) => child.getBounds().maxX);
-            const minX = Math.min(...minXs);
-            const maxX = Math.max(...maxXs);
-            // const width = children.length > 0 ? (maxX - minX) * 50 * children.length : 50;
-            // const width = Math.pow(2, children.length) * 30;
-            // const descendants = node.getDescendants();
             const width = Math.pow(2, height) * 50;
             const childWidth = width / children.length;
             let childX = x - width / 2 + childWidth / 2;

@@ -30,16 +30,16 @@
             <h3>Approximate Sorting</h3>
             <p>We use a soft heap to find the median item of a list. 
                Error rate &epsi; is set to <sup>1</sup>/<sub>2</sub>, meaning no more 
-               than 50% of the items will be corrupted. By inserting 50 numbers, then deleting
-               each of them, there will be at most &epsi;m = 25 corrupted items.
+               than 50% of the items will be corrupted. By inserting <em>n</em> = 32 numbers, then deleting
+               each of them, there will be at most &epsi;n = 16 corrupted items.
             </p>
             <p>
               Take some number <em>x</em>, and let <em>k</em> its rank in the list of items
               removed from the soft heap. Take the number <em>I<sub>k</sub></em>,
               which is the number of items with true keys larger than that of <em>x</em>.
               This is the number of inversions required to sort <em>x</em> into its correct place.
-              The number of corrupted keys is at most &epsi;m = 25, so the number of inversions
-              is at most &epsi;m<sup>2</sup> = 625.
+              The number of corrupted keys is at most &epsi;n = 16, so the number of inversions
+              is at most &epsi;n<sup>2</sup> = 512.
             </p>
             <span id="numbers">
               <span v-for="(n, idx) in numbers"><span :id="`num-${idx + 1}`" class="number">{{ n }}</span></span>
@@ -158,7 +158,7 @@
     }
 
     // Create an array from 1 to 50
-    const keys = Array.from({ length: 50 }, (_, index) => index + 1);
+    const keys = Array.from({ length: 64 }, (_, index) => index + 1);
 
     // Randomize the array
     shuffle(keys);
@@ -180,11 +180,12 @@
       heap.value = SoftHeap.insert(heap.value, new Item(key));
       shAnimator.value.unhighlightDOMElements(`status-${i}`);
     });
+    document.getElementById("btnInsert").disabled = true;
   }
   
   function deleteMin() {
     document.getElementById('status').innerHTML = `deleting all items`;
-    for (let i = 0; i < 50; i++)
+    for (let i = 0; i < 64; i++)
     {
         const min = SoftHeap.findMin(heap.value);
         removedItems.value.push(min.item.key);
@@ -193,6 +194,7 @@
         }
         heap.value = SoftHeap.deleteMin(heap.value);
     }
+    document.getElementById("deleteMin").disabled = true;
   }
   
   function registerListeners() {

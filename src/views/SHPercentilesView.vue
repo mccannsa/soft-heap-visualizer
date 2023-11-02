@@ -182,6 +182,7 @@ function insert() {
     heap.value = MaxSoftHeap.insert(heap.value, new Item(key));
     shAnimator.value.unhighlightDOMElements(`status-${i}`);
   });
+  document.getElementById("deleteMax").disabled = true;
 }
 
 function highlightNintieth() {
@@ -207,6 +208,7 @@ function deleteMax() {
   document.getElementById('status').innerHTML = `delete max returns ${removedItem.value}`;
   const idx = numbers.value.lastIndexOf(removedItem.value);
   document.getElementById(`perc-${idx + 1}`).classList.add('highlighted');
+  document.getElementById("btnDelete").disabled = true;
 }
 
 function registerListeners() {
