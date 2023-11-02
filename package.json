@@ -8,7 +8,7 @@
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
     "format": "prettier --write src/",
-    "compile": "tsc ./src/scripts/*.ts --target es2016"
+    "compile": "tsc ./src/scripts/*.ts --target es2016 --allowSyntheticDefaultImports"
   },
   "dependencies": {
     "@types/lodash": "^4.14.200",

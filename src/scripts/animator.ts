@@ -415,7 +415,7 @@ class Animator {
   startY: number = 0;
   eventBus: AnimatorEventBus = new AnimatorEventBus();
   // synchronizedAnimators: Array<Animator> = [];
-  delayId: number | null = null;
+  delayId: any = null;
   paused: boolean = false;
   pausedEvent: any = null;
   snapshots: Array<Snapshot> = [];
