@@ -8,24 +8,28 @@
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
     "format": "prettier --write src/",
-    "compile": "tsc ./src/scripts/*.ts --target es2016 --allowSyntheticDefaultImports"
+    "compile": "tsc ./src/*/*.ts --target es2016 --allowSyntheticDefaultImports"
   },
   "dependencies": {
     "@types/lodash": "^4.14.200",
-    "cytoscape": "^3.25.0",
+    "cytoscape": "^3.27.0",
     "lodash": "^4.17.21",
-    "typescript": "^5.1.6",
-    "vue": "^3.3.4",
+    "serve": "^14.2.1",
+    "typescript": "^4.9.5",
+    "undici": "^5.27.0",
+    "undici-types": "^5.27.0",
+    "vue": "^3.3.7",
     "vue-router": "^4.2.2"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.2.0",
-    "@types/cytoscape": "^3.19.10",
+    "@types/cytoscape": "^3.19.14",
+    "@types/node": "^14.0.4",
     "@vitejs/plugin-vue": "^4.2.3",
     "@vue/eslint-config-prettier": "^7.1.0",
     "eslint": "^8.39.0",
     "eslint-plugin-vue": "^9.11.0",
     "prettier": "^2.8.8",
-    "vite": "^4.3.9"
+    "vite": "^4.5.0"
   }
 }
